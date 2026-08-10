@@ -1,0 +1,324 @@
+{
+  "$id": "https://shipwright.local/shipwright.schema.v1.json",
+  "title": "Shipwright ship design",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "name": {
+      "type": "string"
+    },
+    "hull": {
+      "type": "object",
+      "properties": {
+        "presetId": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object",
+          "properties": {
+            "keelLength": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "beam": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "depthOfHold": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "freeboard": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "sheer": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "bowFullness": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "sternType": {
+              "type": "string",
+              "enum": [
+                "square",
+                "round"
+              ]
+            },
+            "deckCount": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            }
+          },
+          "required": [
+            "keelLength",
+            "beam",
+            "depthOfHold",
+            "freeboard",
+            "sheer",
+            "bowFullness",
+            "sternType",
+            "deckCount"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "presetId",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    "timber": {
+      "type": "object",
+      "properties": {
+        "speciesId": {
+          "type": "string"
+        },
+        "zones": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "light",
+              "standard",
+              "heavy"
+            ]
+          },
+          "propertyNames": {
+            "enum": [
+              "bottom",
+              "wales",
+              "topsides",
+              "bulwarks",
+              "deck"
+            ]
+          }
+        },
+        "nettings": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "speciesId",
+        "zones",
+        "nettings"
+      ],
+      "additionalProperties": false
+    },
+    "rig": {
+      "type": "object",
+      "properties": {
+        "sailPlanId": {
+          "type": "string",
+          "enum": [
+            "reduced",
+            "standard",
+            "over-canvased"
+          ]
+        },
+        "sails": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "set",
+              "furled"
+            ]
+          }
+        }
+      },
+      "required": [
+        "sailPlanId",
+        "sails"
+      ],
+      "additionalProperties": false
+    },
+    "mounts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "gunId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "port": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "starboard": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "gunId",
+          "port",
+          "starboard"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "cosmetics": {
+      "type": "object",
+      "properties": {
+        "figureheadId": {
+          "type": "string"
+        },
+        "sternGalleryId": {
+          "type": "string"
+        },
+        "paintSchemeId": {
+          "type": "string"
+        },
+        "copperSheathing": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "figureheadId",
+        "sternGalleryId",
+        "paintSchemeId",
+        "copperSheathing"
+      ],
+      "additionalProperties": false
+    },
+    "derived": {
+      "type": "object",
+      "properties": {
+        "displacementTonnes": {
+          "type": "number"
+        },
+        "draftM": {
+          "type": "number"
+        },
+        "gmM": {
+          "type": "number"
+        },
+        "staticListDeg": {
+          "type": "number"
+        },
+        "capsizesAtRest": {
+          "type": "boolean"
+        },
+        "totalGunWeightTonnes": {
+          "type": "number"
+        },
+        "broadsideWeightPortLb": {
+          "type": "number"
+        },
+        "broadsideWeightStarboardLb": {
+          "type": "number"
+        },
+        "crewEstimate": {
+          "type": "number"
+        },
+        "maxSpeedEstimateKn": {
+          "type": "number"
+        },
+        "totalCostPounds": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "displacementTonnes",
+        "draftM",
+        "gmM",
+        "staticListDeg",
+        "capsizesAtRest",
+        "totalGunWeightTonnes",
+        "broadsideWeightPortLb",
+        "broadsideWeightStarboardLb",
+        "crewEstimate",
+        "maxSpeedEstimateKn",
+        "totalCostPounds"
+      ],
+      "additionalProperties": false
+    },
+    "stations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "helm",
+              "gun-battery",
+              "sail-handling",
+              "lookout",
+              "bow-chaser",
+              "stern-chaser"
+            ]
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "crewRequired": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "deck": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "gunCount": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "position",
+          "crewRequired"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "name",
+    "hull",
+    "timber",
+    "rig",
+    "mounts",
+    "cosmetics",
+    "derived",
+    "stations"
+  ],
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
