@@ -48,7 +48,7 @@ export function defaultDesign(presetId: string, name?: string): Design {
   }
 
   const sails: Record<string, SailState> = {}
-  for (const sail of buildSailPlan(hull, sockets.masts, 'standard')) {
+  for (const sail of buildSailPlan(hull, sockets, 'standard')) {
     sails[sail.id] = 'furled'
   }
 
