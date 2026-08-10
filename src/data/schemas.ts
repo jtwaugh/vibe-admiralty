@@ -63,18 +63,19 @@ export const timberZoneSchema = z.object({
     standard: z.number().positive(),
     heavy: z.number().positive(),
   }),
+  /**
+   * Frames, knees, beams and fastenings are not modelled as surfaces. The
+   * planking mass of this zone is multiplied by this to stand in for the whole
+   * structure, and the factor is much larger low down, where the floors,
+   * futtocks and keelson are, than it is in a bulwark.
+   */
+  structureFactor: z.number().positive(),
 })
 export type TimberZone = z.infer<typeof timberZoneSchema>
 
 export const timberFileSchema = z.object({
   species: z.array(timberSpeciesSchema).min(1),
   zones: z.array(timberZoneSchema).length(5),
-  /**
-   * Framing, knees, beams and fastenings are not modelled as surfaces; the
-   * planking mass derived from hull area is multiplied by this to stand in for
-   * the whole structure.
-   */
-  structuralFactor: z.number().positive(),
   /** Hammock nettings: mass per metre of rail, and cost per metre. */
   nettings: z.object({
     massKgPerMetre: z.number().positive(),

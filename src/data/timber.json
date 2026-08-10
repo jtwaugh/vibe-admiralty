@@ -26,30 +26,34 @@
     {
       "id": "bottom",
       "name": "Bottom planking",
-      "thicknessM": { "light": 0.075, "standard": 0.1, "heavy": 0.13 }
+      "thicknessM": { "light": 0.075, "standard": 0.1, "heavy": 0.13 },
+      "structureFactor": 6.2
     },
     {
       "id": "wales",
       "name": "Wales",
-      "thicknessM": { "light": 0.15, "standard": 0.19, "heavy": 0.24 }
+      "thicknessM": { "light": 0.15, "standard": 0.19, "heavy": 0.24 },
+      "structureFactor": 3.5
     },
     {
       "id": "topsides",
       "name": "Topside planking",
-      "thicknessM": { "light": 0.055, "standard": 0.075, "heavy": 0.1 }
+      "thicknessM": { "light": 0.055, "standard": 0.075, "heavy": 0.1 },
+      "structureFactor": 3.0
     },
     {
       "id": "bulwarks",
       "name": "Bulwarks",
-      "thicknessM": { "light": 0.04, "standard": 0.06, "heavy": 0.085 }
+      "thicknessM": { "light": 0.04, "standard": 0.06, "heavy": 0.085 },
+      "structureFactor": 1.8
     },
     {
       "id": "deck",
       "name": "Deck planking",
-      "thicknessM": { "light": 0.06, "standard": 0.08, "heavy": 0.105 }
+      "thicknessM": { "light": 0.06, "standard": 0.08, "heavy": 0.105 },
+      "structureFactor": 3.2
     }
   ],
-  "structuralFactor": 2.7,
   "nettings": {
     "massKgPerMetre": 22,
     "costPoundsPerMetre": 1.6

@@ -137,7 +137,7 @@ function buildHalfSection(u: number, params: HullParams): Vec2[] {
   // runs as a near-horizontal line the length of the hull.
   const yMax = clamp(0.75 * params.depthOfHold, keelY + 0.25 * (railY - keelY), keelY + 0.8 * (railY - keelY))
 
-  const n = 1.6 + 3.6 * sectionFullness(u, params)
+  const n = 1.5 + 2.4 * sectionFullness(u, params)
   const pts: Vec2[] = []
 
   // Lower body: superellipse quadrant from the keel out to maximum breadth.

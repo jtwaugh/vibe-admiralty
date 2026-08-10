@@ -1,5 +1,5 @@
 import type { Hull, Station, Vec2 } from '../hull/stations'
-import { sectionPolygon } from '../hull/stations'
+import { deckYAtU, sectionPolygon } from '../hull/stations'
 
 export type Vec3 = { x: number; y: number; z: number }
 
@@ -13,7 +13,20 @@ export type HullSection = {
   polygon: Vec2[]
 }
 
+/**
+ * The buoyant sections: the hull below the weather deck. Bulwarks are pierced
+ * by scuppers and gunports and hold no water, so they add no buoyancy, and the
+ * deck edge is where a heeling ship stops gaining reserve buoyancy.
+ */
 export function hullSections(hull: Hull): HullSection[] {
+  return hull.stations.map((s: Station) => ({
+    x: s.x,
+    polygon: clipBelowPlane(sectionPolygon(s), 0, 1, deckYAtU(hull, hull.weatherDeckY, s.u)),
+  }))
+}
+
+/** The whole moulded hull including bulwarks, for meshing rather than physics. */
+export function moldedSections(hull: Hull): HullSection[] {
   return hull.stations.map((s: Station) => ({ x: s.x, polygon: sectionPolygon(s) }))
 }
 
@@ -187,6 +200,12 @@ export type FloatOptions = {
   freeTrim?: boolean
   /** Hold trim at this angle instead of solving for it. */
   trimRad?: number
+  /**
+   * Unprotected openings in ship-local coordinates: gunport sills and the like.
+   * A heel that puts one of these under water is not an equilibrium, because
+   * the ship is taking water in. This is how these hulls actually die.
+   */
+  openings?: Vec3[]
 }
 
 export type FloatState = {
@@ -383,6 +402,17 @@ export type EquilibriumResult = {
   state: FloatState
   /** Peak righting moment found in the scan, newton-metres. */
   maxRightingMoment: number
+  /** Heel at which the first opening goes under, each way. NaN if never. */
+  downfloodingDeg: { port: number; starboard: number }
+}
+
+function anyOpeningSubmerged(openings: Vec3[], state: FloatState): boolean {
+  if (openings.length === 0) return false
+  const n = waterplaneNormal(state.heelRad, state.trimRad)
+  for (const p of openings) {
+    if (n.x * p.x + n.y * p.y + n.z * p.z < state.offset) return true
+  }
+  return false
 }
 
 const SCAN_LIMIT_DEG = 88
@@ -400,6 +430,7 @@ export function solveEquilibriumHeel(
   heeling: HeelingMoment = () => 0,
   options: FloatOptions = {},
 ): EquilibriumResult {
+  const openings = options.openings ?? []
   const weight = massKg * GRAVITY
   // Trim is solved once upright and then held while heel is scanned; free trim
   // at every heel angle costs an order of magnitude more work and moves the
@@ -429,6 +460,17 @@ export function solveEquilibriumHeel(
     if (m > maxRighting) maxRighting = m
   }
 
+  // The heel each way at which the first opening dips under.
+  const downflooding = { port: NaN, starboard: NaN }
+  for (const d of degrees) {
+    if (!anyOpeningSubmerged(openings, stateAt(d))) continue
+    if (d > 0 && Number.isNaN(downflooding.starboard)) downflooding.starboard = d
+    if (d < 0) downflooding.port = d
+  }
+  const floods = (deg: number) =>
+    (deg > 0 && !Number.isNaN(downflooding.starboard) && deg >= downflooding.starboard) ||
+    (deg < 0 && !Number.isNaN(downflooding.port) && deg <= downflooding.port)
+
   // A stable equilibrium is where the net moment rises through zero: below it
   // the ship rolls further over, above it the hull pushes back.
   let best: number | null = null
@@ -446,6 +488,9 @@ export function solveEquilibriumHeel(
         else b = mid
       }
       const root = (a + b) / 2
+      // An equilibrium the ship can only hold with her gunports under water is
+      // no equilibrium at all: she floods and goes on over.
+      if (floods(root)) continue
       if (best === null || Math.abs(root) < Math.abs(best)) best = root
     }
   }
@@ -458,8 +503,20 @@ export function solveEquilibriumHeel(
       (SCAN_LIMIT_DEG * Math.PI) / 180,
       scanOptions,
     )
-    return { heelDeg: NaN, capsized: true, state: s, maxRightingMoment: maxRighting }
+    return {
+      heelDeg: NaN,
+      capsized: true,
+      state: s,
+      maxRightingMoment: maxRighting,
+      downfloodingDeg: downflooding,
+    }
   }
   const state = floatAtHeel(sections, massKg, centreOfGravity, (best * Math.PI) / 180, options)
-  return { heelDeg: best, capsized: false, state, maxRightingMoment: maxRighting }
+  return {
+    heelDeg: best,
+    capsized: false,
+    state,
+    maxRightingMoment: maxRighting,
+    downfloodingDeg: downflooding,
+  }
 }

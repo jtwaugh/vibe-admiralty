@@ -16,19 +16,30 @@
         "deckCount": 1
       },
       "ranges": {
-        "beam": { "min": 6.6, "max": 11.2 },
-        "freeboard": { "min": 0.7, "max": 2.1 },
-        "sheer": { "min": 0, "max": 1 }
+        "beam": {
+          "min": 6.6,
+          "max": 11.2
+        },
+        "freeboard": {
+          "min": 0.7,
+          "max": 2.1
+        },
+        "sheer": {
+          "min": 0,
+          "max": 1
+        }
       },
       "mastCount": 1,
-      "gunsPerSideByDeck": [7],
+      "gunsPerSideByDeck": [
+        7
+      ],
       "quarterdeckGunsPerSide": 0,
       "forecastleGunsPerSide": 0,
       "swivelsPerSide": 4,
-      "ballastTonnes": 42,
-      "storesTonnes": 48,
+      "ballastTonnes": 55,
+      "storesTonnes": 55,
       "baseCrew": 55,
-      "hullBaseCostPounds": 3600
+      "hullBaseCostPounds": 2000
     },
     {
       "id": "brig",
@@ -46,19 +57,30 @@
         "deckCount": 1
       },
       "ranges": {
-        "beam": { "min": 7.6, "max": 12.2 },
-        "freeboard": { "min": 0.8, "max": 2.2 },
-        "sheer": { "min": 0, "max": 1 }
+        "beam": {
+          "min": 7.6,
+          "max": 12.2
+        },
+        "freeboard": {
+          "min": 0.8,
+          "max": 2.2
+        },
+        "sheer": {
+          "min": 0,
+          "max": 1
+        }
       },
       "mastCount": 2,
-      "gunsPerSideByDeck": [9],
+      "gunsPerSideByDeck": [
+        9
+      ],
       "quarterdeckGunsPerSide": 0,
       "forecastleGunsPerSide": 0,
       "swivelsPerSide": 4,
-      "ballastTonnes": 60,
-      "storesTonnes": 70,
+      "ballastTonnes": 110,
+      "storesTonnes": 80,
       "baseCrew": 90,
-      "hullBaseCostPounds": 5200
+      "hullBaseCostPounds": 2900
     },
     {
       "id": "frigate-28",
@@ -76,19 +98,30 @@
         "deckCount": 1
       },
       "ranges": {
-        "beam": { "min": 9.2, "max": 13.6 },
-        "freeboard": { "min": 1, "max": 2.4 },
-        "sheer": { "min": 0, "max": 1 }
+        "beam": {
+          "min": 9.2,
+          "max": 13.6
+        },
+        "freeboard": {
+          "min": 1,
+          "max": 2.4
+        },
+        "sheer": {
+          "min": 0,
+          "max": 1
+        }
       },
       "mastCount": 3,
-      "gunsPerSideByDeck": [11],
+      "gunsPerSideByDeck": [
+        11
+      ],
       "quarterdeckGunsPerSide": 3,
       "forecastleGunsPerSide": 2,
       "swivelsPerSide": 5,
-      "ballastTonnes": 105,
-      "storesTonnes": 150,
+      "ballastTonnes": 250,
+      "storesTonnes": 210,
       "baseCrew": 155,
-      "hullBaseCostPounds": 10500
+      "hullBaseCostPounds": 5800
     },
     {
       "id": "frigate-38",
@@ -106,19 +139,30 @@
         "deckCount": 1
       },
       "ranges": {
-        "beam": { "min": 10.2, "max": 14.8 },
-        "freeboard": { "min": 1, "max": 2.6 },
-        "sheer": { "min": 0, "max": 1 }
+        "beam": {
+          "min": 10.2,
+          "max": 14.8
+        },
+        "freeboard": {
+          "min": 1,
+          "max": 2.6
+        },
+        "sheer": {
+          "min": 0,
+          "max": 1
+        }
       },
       "mastCount": 3,
-      "gunsPerSideByDeck": [14],
+      "gunsPerSideByDeck": [
+        14
+      ],
       "quarterdeckGunsPerSide": 4,
       "forecastleGunsPerSide": 2,
       "swivelsPerSide": 6,
-      "ballastTonnes": 150,
-      "storesTonnes": 210,
+      "ballastTonnes": 400,
+      "storesTonnes": 340,
       "baseCrew": 200,
-      "hullBaseCostPounds": 15500
+      "hullBaseCostPounds": 8600
     },
     {
       "id": "third-rate-74",
@@ -136,19 +180,31 @@
         "deckCount": 2
       },
       "ranges": {
-        "beam": { "min": 12.6, "max": 17.4 },
-        "freeboard": { "min": 1.1, "max": 2.8 },
-        "sheer": { "min": 0, "max": 1 }
+        "beam": {
+          "min": 12.6,
+          "max": 17.4
+        },
+        "freeboard": {
+          "min": 1.1,
+          "max": 2.8
+        },
+        "sheer": {
+          "min": 0,
+          "max": 1
+        }
       },
       "mastCount": 3,
-      "gunsPerSideByDeck": [14, 15],
+      "gunsPerSideByDeck": [
+        14,
+        15
+      ],
       "quarterdeckGunsPerSide": 7,
       "forecastleGunsPerSide": 2,
       "swivelsPerSide": 8,
-      "ballastTonnes": 320,
-      "storesTonnes": 430,
+      "ballastTonnes": 800,
+      "storesTonnes": 800,
       "baseCrew": 500,
-      "hullBaseCostPounds": 27000
+      "hullBaseCostPounds": 15000
     }
   ]
 }
