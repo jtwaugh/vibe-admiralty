@@ -89,8 +89,8 @@ function keelRise(u: number, params: HullParams): number {
 
 /** Rise of the deck and rail lines above their amidships height. */
 export function sheerRise(u: number, params: HullParams): number {
-  const bow = params.sheer * 0.045 * params.keelLength
-  const stern = bow * 0.6
+  const bow = params.sheer * 0.075 * params.keelLength
+  const stern = bow * 0.7
   if (u >= SHEER_LOW_U) {
     const s = (u - SHEER_LOW_U) / (1 - SHEER_LOW_U)
     return bow * s * s

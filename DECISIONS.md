@@ -40,3 +40,46 @@ Judgment calls made where SPEC.md is silent. One line of rationale each.
 - **Equilibrium heel is the root of (righting moment - heeling moment) nearest
   upright with the net moment rising through zero.** No equilibrium in
   +/-88 degrees is reported as capsize; nothing about capsize is scripted.
+
+## Mass and cost model
+
+- **The framing factor is per timber zone, not one global number.** A wooden
+  warship's floors, futtocks and keelson are concentrated low, so multiplying
+  deck planking and bottom planking by the same figure put the centre of
+  gravity far too high and left every hull tender.
+- **Ballast and stores are preset data**, tuned so each preset lands in a
+  historically plausible band for displacement, draft and GM rather than being
+  derived from a formula.
+- **Gun crews are counted for the larger broadside only**, since a crew serves
+  one side at a time; this is what makes an asymmetric ship cheap in men.
+- **Hull yard cost is a flat per-preset figure** standing for labour, fastenings
+  and fitting out; timber, rig, copper and guns are computed from the model, so
+  species and scantling changes move the total on their own.
+
+## Physics beyond the letter of SPEC
+
+- **Buoyancy stops at the weather deck.** Bulwarks are pierced by scuppers and
+  gunports and hold no water. Without this the hulls are sealed boxes, and a
+  hull taller than it is wide has a righting arm that never vanishes, so no
+  ship could ever capsize.
+- **Openings end the stability range.** Gunport sills are emitted as sockets;
+  a heel that puts one under water is rejected as an equilibrium, because the
+  ship is downflooding. This is a physical rule about an open ship, not a
+  scripted capsize: the solver still finds equilibria purely from the station
+  clipping, it just will not accept one that is under water.
+
+## Rendering
+
+- **The broadside camera is a 13-degree lens placed below the rail.** An
+  orthographic camera reads as a true elevation but leaves a flat sea edge on,
+  so the whole underwater body shows through; a camera above the rail looks
+  down into the ship over her own bulwark. Sitting the eye below the rail and
+  well above the water gives an elevation-like read, hides the interior, and
+  lets the sea occlude the bottom.
+- **The paint scheme is a drawn texture, not vertex colours.** The shell's v
+  coordinate has the sheer subtracted before normalising, so a band drawn at a
+  constant v follows the sheer line the way a painted strake does, and the
+  strakes stay crisp.
+- **The stem and transom are separate joinery, not station geometry.** Raking
+  them would make the stations non-planar and break the rule that one set of
+  station curves drives mesh, physics and sockets.
