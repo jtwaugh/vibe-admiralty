@@ -1,12 +1,20 @@
 import { expect, test } from '@playwright/test'
+
 /** Preset ids as the UI exposes them; e2e drives the app as a user would. */
 const PRESET_IDS = ['sloop', 'brig', 'frigate-28', 'frigate-38', 'third-rate-74']
 
 /**
- * Phase 1 demo script: one broadside profile per preset, plus an orbit view of
- * the frigate. These are for looking at, per CLAUDE.md rule 2.
+ * Demo screenshots for looking at, per CLAUDE.md rule 2: the hull select
+ * screen, one broadside profile per preset, and the designer at work.
  */
-test.describe('hull gallery', () => {
+test.describe('gallery', () => {
+  test('hull select', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.getByTestId('preset-thumb-third-rate-74')).toBeVisible()
+    await page.waitForTimeout(300)
+    await page.screenshot({ path: 'shots/hull-select.png', fullPage: true })
+  })
+
   for (const presetId of PRESET_IDS) {
     test(`broadside profile: ${presetId}`, async ({ page }) => {
       await page.goto('/')
@@ -23,5 +31,32 @@ test.describe('hull gallery', () => {
     await page.getByTestId('camera-toggle').click()
     await page.waitForTimeout(900)
     await page.screenshot({ path: 'shots/orbit-frigate-38.png' })
+  })
+
+  test('mount modal', async ({ page }) => {
+    await page.goto('/')
+    await page.getByTestId('preset-frigate-38').click()
+    await page.getByTestId('mount-row-quarterdeck').click()
+    await expect(page.getByTestId('mount-modal')).toBeVisible()
+    await page.getByTestId('gun-carronade-32').click()
+    await page.waitForTimeout(400)
+    await page.screenshot({ path: 'shots/mount-modal.png' })
+  })
+
+  test('the lopside: every battery to port', async ({ page }) => {
+    await page.goto('/')
+    await page.getByTestId('preset-frigate-38').click()
+    for (const id of ['battery-deck-0', 'quarterdeck', 'forecastle']) {
+      await page.getByTestId(`mount-row-${id}`).click()
+      await page.getByTestId('mount-match').uncheck()
+      const starboard = page.getByTestId('mount-starboard')
+      while (Number(await starboard.innerText()) > 0) {
+        await page.getByTestId('mount-starboard-less').click()
+      }
+      await page.getByTestId('mount-close').click()
+    }
+    await page.getByTestId('camera-toggle').click()
+    await page.waitForTimeout(900)
+    await page.screenshot({ path: 'shots/lopside-frigate-38.png' })
   })
 })

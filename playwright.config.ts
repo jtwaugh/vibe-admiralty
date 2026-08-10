@@ -8,19 +8,22 @@ export default defineConfig({
   timeout: 60_000,
   use: {
     baseURL: 'http://localhost:4173',
-    viewport: { width: 1440, height: 900 },
-    deviceScaleFactor: 2,
   },
   projects: [
     {
       name: 'e2e',
       testMatch: /.*\.spec\.ts/,
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     {
       name: 'shots',
       testMatch: /.*\.shots\.ts/,
-      use: { ...devices['Desktop Chrome'] },
+      // Demo screenshots are taken at retina scale, because they are looked at.
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 900 },
+        deviceScaleFactor: 2,
+      },
     },
   ],
   webServer: {

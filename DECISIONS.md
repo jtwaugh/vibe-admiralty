@@ -68,6 +68,40 @@ Judgment calls made where SPEC.md is silent. One line of rationale each.
   scripted capsize: the solver still finds equilibria purely from the station
   clipping, it just will not accept one that is under water.
 
+## Phase 2: the designer
+
+- **Two screens, and Launch is disabled until phase 3.** SPEC §3 describes three
+  views; shipping a stub sea trial would be a fake feature, so the button is
+  present, disabled, and labelled as opening in phase 3.
+- **Panel groups are collapsible, with Hull and Ordnance open.** Five open
+  groups plus the mount list overflow the panel on a laptop; these two are the
+  ones a player touches first.
+- **Mounts are reachable two ways: a marker on the hull and a row in the panel.**
+  SPEC §3 asks for raycast markers on real geometry, which is what the rings
+  are, but an invisible-until-hovered target is unusable by keyboard, so the
+  panel mirrors them.
+- **Every mount carries a marker on both sides of the ship**, and only the one
+  facing the camera gets a hit area. A single starboard marker would be
+  unreachable whenever the orbit camera looked at the port side.
+- **A gun's socket is the centre of its port on the shell**, and both the mesh
+  and the mass model work inboard from there by the gun's own length: a long 32
+  stands much further inboard than a 32 lb carronade. Before this the sockets
+  were a fixed 0.55 m inboard and every muzzle stood two metres clear of the
+  side.
+- **`staticListDeg` exports as 90 when no equilibrium exists.** JSON has no NaN,
+  and `capsizesAtRest` beside it says what really happened.
+- **glTF is exported as JSON in ship-local coordinates with the baseline at
+  y = 0**, and mount markers, being invisible, are skipped by the exporter.
+- **`shipwright.schema.json` is generated from the zod schema** by
+  `npm run schema`, and a unit test fails if the checked-in file drifts. Two
+  hand-maintained copies of one contract would disagree within a week.
+- **Figureheads and stern galleries are modelled, not just weighed.** SPEC §5
+  lists them as cosmetics, and a cosmetic that cannot be seen is not one.
+- **Fore-and-aft sails are laid out on the rig, and their centre of effort is
+  the centroid of the cloth.** Before this the drawn jib and the jib the wind
+  pushed on were in different places, which is exactly the second source of
+  truth rule 4 forbids.
+
 ## Rendering
 
 - **The broadside camera is a 13-degree lens placed below the rail.** An
@@ -83,3 +117,15 @@ Judgment calls made where SPEC.md is silent. One line of rationale each.
 - **The stem and transom are separate joinery, not station geometry.** Raking
   them would make the stations non-planar and break the rule that one set of
   station curves drives mesh, physics and sockets.
+- **Joinery is built as swept solids, never as two coincident faces.** The stem
+  was a ribbon with a front and a back face on the same vertices; their normals
+  cancelled and the whole piece rendered unlit, which is why the frigate looked
+  as though her bow had been sawn off.
+- **The sea takes no shadow.** A shadow map stretched over a six-kilometre plane
+  at a grazing sun angle streaks and shimmers, and open water would not hold a
+  hard shadow anyway. The ship still shadows herself.
+- **The camera frames the ship from her stern to her bowsprit end**, not from
+  her stem. Framing on the hull alone cropped the bowsprit off the picture, and
+  cropped it out of the screenshots the e2e suite measures.
+- **Hull thumbnails share one WebGL context**, rendered one per frame. Five live
+  canvases would burn five contexts, and browsers only grant a handful.
