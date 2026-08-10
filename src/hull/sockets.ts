@@ -12,7 +12,12 @@ export type MountSocket = {
   /** Index into hull.decks. */
   deckIndex: number
   maxPerSide: number
-  /** Starboard-side position of each gun, fore to aft. Port mirrors z. */
+  /**
+   * Starboard gun stations, fore to aft: the centre of the port on the shell,
+   * at the height of the bore axis. Port mirrors z. Where the gun itself sits
+   * behind that point depends on the gun, so mesh and mass model both work
+   * inboard from here with gunOriginZ / gunCentreOfMassZ.
+   */
   positions: Vec3[]
   /** Where the clickable marker sits, on the starboard shell. */
   marker: Vec3
@@ -31,9 +36,18 @@ export type MastSocket = {
   truckY: number
 }
 
+/** The bowsprit, which anchors the head rig: the stays and the headsails. */
+export type BowspritSocket = {
+  rootX: number
+  rootY: number
+  tipX: number
+  tipY: number
+}
+
 export type Sockets = {
   mounts: MountSocket[]
   masts: MastSocket[]
+  bowsprit: BowspritSocket
   /** Position of the wheel, used for the helm crew station. */
   helm: Vec3
   /**
@@ -46,12 +60,36 @@ export type Sockets = {
 /** Height of a gunport sill above the deck it opens onto. */
 export const GUNPORT_SILL_HEIGHT = 0.55
 
-/** Height of a gun's barrel axis above the deck it stands on. */
-const GUN_AXIS_HEIGHT = 0.62
-/** How far inboard of the shell the centre of a gun sits. */
-const GUN_INBOARD = 0.55
+/**
+ * Height of a gun's bore axis above the deck it stands on. This is the middle
+ * of the gunport, so the painted ports and the gun meshes agree.
+ */
+export const GUN_AXIS_HEIGHT = GUNPORT_SILL_HEIGHT + 0.5
+/** Height of a gunport opening, sill to head. */
+export const GUNPORT_HEIGHT = 1.0
+/** Width of a gunport opening. */
+export const GUNPORT_WIDTH = 0.95
+/** How far a muzzle stands out beyond the ship's side. */
+const MUZZLE_PROTRUSION = 0.45
 /** Height of a swivel above the rail. */
 const SWIVEL_RISE = 0.35
+
+/**
+ * Where the breech end of a gun sits, given the half breadth of the shell at
+ * its port. A gun is run out until its muzzle just clears the side, so a long
+ * gun stands much further inboard than a stubby carronade of the same rating.
+ */
+export function gunOriginZ(shellZ: number, barrelLengthM: number): number {
+  return Math.max(0.25, shellZ + MUZZLE_PROTRUSION - barrelLengthM)
+}
+
+/**
+ * Centre of gravity of a mounted gun: the barrel thickens towards the breech
+ * and the carriage sits under it, so the mass rides just abaft the trunnions.
+ */
+export function gunCentreOfMassZ(shellZ: number, barrelLengthM: number): number {
+  return gunOriginZ(shellZ, barrelLengthM) + 0.42 * barrelLengthM
+}
 
 /** Longitudinal spans, as normalised position from stern (0) to bow (1). */
 const BATTERY_SPAN: [number, number] = [0.16, 0.87]
@@ -92,8 +130,11 @@ function gunPositions(
 ): Vec3[] {
   return spread(span, count).map((u) => {
     const y = deckYAtU(hull, deckY, u) + GUN_AXIS_HEIGHT
-    const z = Math.max(0.4, halfBreadthAt(hull, u, y) - GUN_INBOARD)
-    return { x: (u - 0.5) * hull.params.keelLength, y, z }
+    return {
+      x: (u - 0.5) * hull.params.keelLength,
+      y,
+      z: Math.max(0.4, halfBreadthAt(hull, u, y)),
+    }
   })
 }
 
@@ -204,6 +245,20 @@ export function buildSockets(hull: Hull, preset: HullPreset): Sockets {
     }
   })
 
+  // The bowsprit steeves up over the head, projecting about a quarter of the
+  // hull's length beyond the stem.
+  const bowspritRootU = 0.965
+  const bowspritRootX = (bowspritRootU - 0.5) * L
+  const bowspritRootY = deckYAtU(hull, hull.weatherDeckY, bowspritRootU)
+  const bowspritLength = 1.15 * hull.params.beam
+  const steeve = 0.32
+  const bowsprit: BowspritSocket = {
+    rootX: bowspritRootX,
+    rootY: bowspritRootY,
+    tipX: bowspritRootX + bowspritLength * Math.cos(steeve),
+    tipY: bowspritRootY + bowspritLength * Math.sin(steeve),
+  }
+
   const openings: Vec3[] = []
   for (let deckIndex = 0; deckIndex < hull.params.deckCount; deckIndex++) {
     const deckY = hull.decks[deckIndex].y
@@ -220,6 +275,7 @@ export function buildSockets(hull: Hull, preset: HullPreset): Sockets {
   return {
     mounts,
     masts,
+    bowsprit,
     openings,
     helm: {
       x: (helmU - 0.5) * L,

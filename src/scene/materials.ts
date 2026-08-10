@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { cosmeticsFile, getSpecies } from '../data'
+import { GUNPORT_HEIGHT, GUNPORT_SILL_HEIGHT, GUNPORT_WIDTH } from '../hull/sockets'
 import type { Hull } from '../hull/stations'
 import { deckYAtU, hullDepth } from '../hull/stations'
 import type { ShipModel } from '../physics/masses'
@@ -32,14 +33,17 @@ function rowFor(v: number): number {
  * rather than colouring vertices keeps the strakes crisp, and the shell's v
  * coordinate already follows the sheer so the stripes curve with the ship.
  */
-export function createPaintTexture(options: PaintOptions): THREE.CanvasTexture {
+export function createPaintTexture(options: PaintOptions): THREE.CanvasTexture | null {
   const { hull, model, waterlineY } = options
   const scheme =
     cosmeticsFile.paintSchemes.find((p) => p.id === model.design.cosmetics.paintSchemeId) ??
     cosmeticsFile.paintSchemes[0]
   const depth = hullDepth(hull.params)
   const canvas = makeCanvas(PAINT_WIDTH, PAINT_HEIGHT)
-  const ctx = canvas.getContext('2d')!
+  const ctx = canvas.getContext('2d')
+  // Headless environments (the glTF export test) have no 2d canvas; the caller
+  // falls back to flat colour, which is all those runs need.
+  if (!ctx) return null
 
   ctx.fillStyle = scheme.hullColor
   ctx.fillRect(0, 0, PAINT_WIDTH, PAINT_HEIGHT)
@@ -77,19 +81,26 @@ export function createPaintTexture(options: PaintOptions): THREE.CanvasTexture {
     }
   }
 
-  // Gunport lids: black squares on the strake, at the socket positions.
-  ctx.fillStyle = '#141210'
+  // Gunport lids: dark openings on the strake, at the socket positions. Width
+  // comes from the real port width, not from the pixel height, because the
+  // texture is stretched differently along the ship than up her side.
+  const portWidthPx = (GUNPORT_WIDTH / hull.params.keelLength) * PAINT_WIDTH
   for (const socket of model.sockets.mounts) {
     if (socket.kind !== 'battery') continue
     const deck = hull.decks[socket.deckIndex]
-    const sillV = (deck.y + 0.5) / depth
-    const headV = (deck.y + 1.5) / depth
-    const top = rowFor(headV)
-    const height = rowFor(sillV) - top
+    const top = rowFor((deck.y + GUNPORT_SILL_HEIGHT + GUNPORT_HEIGHT) / depth)
+    const height = rowFor((deck.y + GUNPORT_SILL_HEIGHT) / depth) - top
     for (const position of socket.positions) {
       const u = position.x / hull.params.keelLength + 0.5
-      const width = height * 0.95
-      ctx.fillRect(u * PAINT_WIDTH - width / 2, top, width, height)
+      const left = u * PAINT_WIDTH - portWidthPx / 2
+      ctx.fillStyle = '#141210'
+      ctx.fillRect(left, top, portWidthPx, height)
+      // A lid hinged at the head, thrown up over the port.
+      ctx.fillStyle = scheme.stripeColor
+      ctx.fillRect(left, top - height * 0.16, portWidthPx, height * 0.16)
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)'
+      ctx.lineWidth = 1
+      ctx.strokeRect(left, top - height * 0.16, portWidthPx, height * 1.16)
     }
   }
 
@@ -106,9 +117,10 @@ export function createPaintTexture(options: PaintOptions): THREE.CanvasTexture {
 }
 
 /** Scrubbed deck planking: pale timber with darker caulked seams. */
-export function createDeckTexture(): THREE.CanvasTexture {
+export function createDeckTexture(): THREE.CanvasTexture | null {
   const canvas = makeCanvas(256, 256)
-  const ctx = canvas.getContext('2d')!
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
   ctx.fillStyle = '#c2a878'
   ctx.fillRect(0, 0, 256, 256)
   ctx.strokeStyle = '#8d7752'
@@ -140,6 +152,13 @@ export type ShipMaterials = {
   timber: THREE.MeshStandardMaterial
   iron: THREE.MeshStandardMaterial
   brass: THREE.MeshStandardMaterial
+  canvas: THREE.MeshStandardMaterial
+  furledCanvas: THREE.MeshStandardMaterial
+  gilding: THREE.MeshStandardMaterial
+  glass: THREE.MeshStandardMaterial
+  underwater: THREE.MeshStandardMaterial
+  marker: THREE.MeshStandardMaterial
+  markerActive: THREE.MeshStandardMaterial
   rigging: THREE.LineBasicMaterial
   dispose(): void
 }
@@ -148,14 +167,20 @@ export function createShipMaterials(options: PaintOptions): ShipMaterials {
   const paint = createPaintTexture(options)
   const deckTexture = createDeckTexture()
   const species = getSpecies(options.model.design.timber.speciesId)
+  const scheme =
+    cosmeticsFile.paintSchemes.find(
+      (p) => p.id === options.model.design.cosmetics.paintSchemeId,
+    ) ?? cosmeticsFile.paintSchemes[0]
 
   const hull = new THREE.MeshStandardMaterial({
     map: paint,
+    color: new THREE.Color(paint ? '#ffffff' : scheme.hullColor),
     roughness: 0.72,
     metalness: 0.02,
   })
   const deck = new THREE.MeshStandardMaterial({
     map: deckTexture,
+    color: new THREE.Color(deckTexture ? '#ffffff' : '#c2a878'),
     roughness: 0.85,
     metalness: 0,
   })
@@ -185,6 +210,62 @@ export function createShipMaterials(options: PaintOptions): ShipMaterials {
     transparent: true,
     opacity: 0.85,
   })
+  // Sailcloth is thin: it is lit from both sides and shows through a little.
+  const canvasCloth = new THREE.MeshStandardMaterial({
+    color: new THREE.Color('#e6dcc4'),
+    roughness: 0.95,
+    metalness: 0,
+    side: THREE.DoubleSide,
+  })
+
+  // Mount markers: a brass ring that reads against black topsides and pale sky
+  // alike, and glows when its modal is open.
+  const marker = new THREE.MeshStandardMaterial({
+    color: new THREE.Color('#f0c268'),
+    emissive: new THREE.Color('#7a4d12'),
+    roughness: 0.35,
+    metalness: 0.6,
+    transparent: true,
+    opacity: 0.92,
+  })
+  const markerActive = new THREE.MeshStandardMaterial({
+    color: new THREE.Color('#fff3d0'),
+    emissive: new THREE.Color('#c98a1e'),
+    emissiveIntensity: 1.4,
+    roughness: 0.3,
+    metalness: 0.5,
+    transparent: true,
+    opacity: 0.98,
+  })
+
+  // Rolled canvas is a little duller than a sail drawing full, but it still has
+  // to read as canvas against the sky.
+  const furledCanvas = new THREE.MeshStandardMaterial({
+    color: new THREE.Color('#cabfa4'),
+    roughness: 1,
+    metalness: 0,
+  })
+  // Gold leaf on the carved work: figurehead, gallery rails, taffrail.
+  const gilding = new THREE.MeshStandardMaterial({
+    color: new THREE.Color('#d9ad4e'),
+    roughness: 0.32,
+    metalness: 0.7,
+  })
+  // Stern lights: dark glass with a little sheen.
+  const glass = new THREE.MeshStandardMaterial({
+    color: new THREE.Color('#16242e'),
+    roughness: 0.18,
+    metalness: 0.25,
+    side: THREE.DoubleSide,
+  })
+  // Anything below the waterline that is not the shell: rudder, keel shoe.
+  const underwater = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(
+      options.model.design.cosmetics.copperSheathing ? '#8b5230' : '#7d786a',
+    ),
+    roughness: 0.7,
+    metalness: options.model.design.cosmetics.copperSheathing ? 0.35 : 0.05,
+  })
 
   return {
     hull,
@@ -193,11 +274,34 @@ export function createShipMaterials(options: PaintOptions): ShipMaterials {
     timber,
     iron,
     brass,
+    canvas: canvasCloth,
+    furledCanvas,
+    gilding,
+    glass,
+    underwater,
+    marker,
+    markerActive,
     rigging,
     dispose() {
-      paint.dispose()
-      deckTexture.dispose()
-      for (const m of [hull, deck, bulwark, timber, iron, brass, rigging]) m.dispose()
+      paint?.dispose()
+      deckTexture?.dispose()
+      const all = [
+        hull,
+        deck,
+        bulwark,
+        timber,
+        iron,
+        brass,
+        canvasCloth,
+        furledCanvas,
+        gilding,
+        glass,
+        underwater,
+        marker,
+        markerActive,
+        rigging,
+      ]
+      for (const m of all) m.dispose()
     },
   }
 }

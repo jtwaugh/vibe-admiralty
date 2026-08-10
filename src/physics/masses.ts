@@ -13,7 +13,7 @@ import { hullZoneSurfaces, railLength } from '../hull/areas'
 import type { Hull } from '../hull/stations'
 import { buildHull } from '../hull/stations'
 import type { MountSocket, Sockets } from '../hull/sockets'
-import { buildSockets } from '../hull/sockets'
+import { buildSockets, gunCentreOfMassZ } from '../hull/sockets'
 import type { Design } from '../export/schema'
 import type { Vec3 } from './hydrostatics'
 import { buildSailPlan, totalSailArea } from './sailplan'
@@ -135,11 +135,15 @@ export function mountGunMasses(sockets: Sockets, design: Design): MassItem[] {
       for (let i = 0; i < count; i++) {
         const p = socket.positions[i]
         if (!p) continue
+        // Swivels are clamped on the rail; carriage guns stand inboard of their
+        // ports by however much barrel they have.
+        const z =
+          socket.kind === 'swivel' ? p.z : gunCentreOfMassZ(p.z, gun.barrelLengthM)
         items.push({
           label: `${gun.name} (${side})`,
           group: 'guns',
           massKg: gun.massKg,
-          position: { x: p.x, y: p.y, z: side === 'port' ? -p.z : p.z },
+          position: { x: p.x, y: p.y, z: side === 'port' ? -z : z },
         })
       }
     }
@@ -162,7 +166,7 @@ export function buildShipModel(design: Design): ShipModel {
   const preset = getPreset(design.presetId)
   const hull = buildHull(design.hull)
   const sockets = buildSockets(hull, preset)
-  const sails = buildSailPlan(hull, sockets.masts, design.rig.sailPlanId)
+  const sails = buildSailPlan(hull, sockets, design.rig.sailPlanId)
   const sailAreaM2 = totalSailArea(sails)
 
   const items: MassItem[] = timberMasses(hull, design)
