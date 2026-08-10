@@ -1,0 +1,154 @@
+{
+  "presets": [
+    {
+      "id": "sloop",
+      "name": "Sloop",
+      "blurb": "A single-masted cutter-rigged sloop. Fast, wet, and lightly armed.",
+      "nominalGuns": 14,
+      "params": {
+        "keelLength": 30,
+        "beam": 8.6,
+        "depthOfHold": 4.4,
+        "freeboard": 1.2,
+        "sheer": 0.55,
+        "bowFullness": 0.42,
+        "sternType": "round",
+        "deckCount": 1
+      },
+      "ranges": {
+        "beam": { "min": 6.6, "max": 11.2 },
+        "freeboard": { "min": 0.7, "max": 2.1 },
+        "sheer": { "min": 0, "max": 1 }
+      },
+      "mastCount": 1,
+      "gunsPerSideByDeck": [7],
+      "quarterdeckGunsPerSide": 0,
+      "forecastleGunsPerSide": 0,
+      "swivelsPerSide": 4,
+      "ballastTonnes": 42,
+      "storesTonnes": 48,
+      "baseCrew": 55,
+      "hullBaseCostPounds": 3600
+    },
+    {
+      "id": "brig",
+      "name": "Brig",
+      "blurb": "Two masts, square rigged, handy in a chase. The navy's workhorse.",
+      "nominalGuns": 18,
+      "params": {
+        "keelLength": 34,
+        "beam": 9.6,
+        "depthOfHold": 5,
+        "freeboard": 1.3,
+        "sheer": 0.5,
+        "bowFullness": 0.48,
+        "sternType": "square",
+        "deckCount": 1
+      },
+      "ranges": {
+        "beam": { "min": 7.6, "max": 12.2 },
+        "freeboard": { "min": 0.8, "max": 2.2 },
+        "sheer": { "min": 0, "max": 1 }
+      },
+      "mastCount": 2,
+      "gunsPerSideByDeck": [9],
+      "quarterdeckGunsPerSide": 0,
+      "forecastleGunsPerSide": 0,
+      "swivelsPerSide": 4,
+      "ballastTonnes": 60,
+      "storesTonnes": 70,
+      "baseCrew": 90,
+      "hullBaseCostPounds": 5200
+    },
+    {
+      "id": "frigate-28",
+      "name": "Frigate (28)",
+      "blurb": "A sixth-rate cruiser. Enough gun to bully a privateer, enough leg to run.",
+      "nominalGuns": 28,
+      "params": {
+        "keelLength": 41,
+        "beam": 11.2,
+        "depthOfHold": 6.4,
+        "freeboard": 1.5,
+        "sheer": 0.45,
+        "bowFullness": 0.5,
+        "sternType": "round",
+        "deckCount": 1
+      },
+      "ranges": {
+        "beam": { "min": 9.2, "max": 13.6 },
+        "freeboard": { "min": 1, "max": 2.4 },
+        "sheer": { "min": 0, "max": 1 }
+      },
+      "mastCount": 3,
+      "gunsPerSideByDeck": [11],
+      "quarterdeckGunsPerSide": 3,
+      "forecastleGunsPerSide": 2,
+      "swivelsPerSide": 5,
+      "ballastTonnes": 105,
+      "storesTonnes": 150,
+      "baseCrew": 155,
+      "hullBaseCostPounds": 10500
+    },
+    {
+      "id": "frigate-38",
+      "name": "Frigate (38)",
+      "blurb": "A fifth-rate eighteen-pounder frigate. The best cruising ship afloat.",
+      "nominalGuns": 38,
+      "params": {
+        "keelLength": 46,
+        "beam": 12.2,
+        "depthOfHold": 7.2,
+        "freeboard": 1.6,
+        "sheer": 0.45,
+        "bowFullness": 0.52,
+        "sternType": "round",
+        "deckCount": 1
+      },
+      "ranges": {
+        "beam": { "min": 10.2, "max": 14.8 },
+        "freeboard": { "min": 1, "max": 2.6 },
+        "sheer": { "min": 0, "max": 1 }
+      },
+      "mastCount": 3,
+      "gunsPerSideByDeck": [14],
+      "quarterdeckGunsPerSide": 4,
+      "forecastleGunsPerSide": 2,
+      "swivelsPerSide": 6,
+      "ballastTonnes": 150,
+      "storesTonnes": 210,
+      "baseCrew": 200,
+      "hullBaseCostPounds": 15500
+    },
+    {
+      "id": "third-rate-74",
+      "name": "Third Rate (74)",
+      "blurb": "Two full gun decks and a line-of-battle broadside. Slow, deliberate, enormous.",
+      "nominalGuns": 74,
+      "params": {
+        "keelLength": 53,
+        "beam": 14.8,
+        "depthOfHold": 8.6,
+        "freeboard": 1.7,
+        "sheer": 0.4,
+        "bowFullness": 0.6,
+        "sternType": "square",
+        "deckCount": 2
+      },
+      "ranges": {
+        "beam": { "min": 12.6, "max": 17.4 },
+        "freeboard": { "min": 1.1, "max": 2.8 },
+        "sheer": { "min": 0, "max": 1 }
+      },
+      "mastCount": 3,
+      "gunsPerSideByDeck": [14, 15],
+      "quarterdeckGunsPerSide": 7,
+      "forecastleGunsPerSide": 2,
+      "swivelsPerSide": 8,
+      "ballastTonnes": 320,
+      "storesTonnes": 430,
+      "baseCrew": 500,
+      "hullBaseCostPounds": 27000
+    }
+  ]
+}

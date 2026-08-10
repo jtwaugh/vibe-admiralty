@@ -1,0 +1,180 @@
+{
+  "guns": [
+    {
+      "id": "long-6",
+      "name": "Long 6-pounder",
+      "pattern": "long",
+      "shotWeightLb": 6,
+      "massKg": 800,
+      "costPounds": 55,
+      "barrelLengthM": 1.98,
+      "boreM": 0.093,
+      "crewPerGun": 4
+    },
+    {
+      "id": "long-9",
+      "name": "Long 9-pounder",
+      "pattern": "long",
+      "shotWeightLb": 9,
+      "massKg": 1150,
+      "costPounds": 75,
+      "barrelLengthM": 2.44,
+      "boreM": 0.107,
+      "crewPerGun": 5
+    },
+    {
+      "id": "long-12",
+      "name": "Long 12-pounder",
+      "pattern": "long",
+      "shotWeightLb": 12,
+      "massKg": 1500,
+      "costPounds": 100,
+      "barrelLengthM": 2.74,
+      "boreM": 0.118,
+      "crewPerGun": 6
+    },
+    {
+      "id": "long-18",
+      "name": "Long 18-pounder",
+      "pattern": "long",
+      "shotWeightLb": 18,
+      "massKg": 2000,
+      "costPounds": 135,
+      "barrelLengthM": 2.9,
+      "boreM": 0.135,
+      "crewPerGun": 9
+    },
+    {
+      "id": "long-24",
+      "name": "Long 24-pounder",
+      "pattern": "long",
+      "shotWeightLb": 24,
+      "massKg": 2400,
+      "costPounds": 165,
+      "barrelLengthM": 2.9,
+      "boreM": 0.149,
+      "crewPerGun": 12
+    },
+    {
+      "id": "long-32",
+      "name": "Long 32-pounder",
+      "pattern": "long",
+      "shotWeightLb": 32,
+      "massKg": 2800,
+      "costPounds": 200,
+      "barrelLengthM": 3.05,
+      "boreM": 0.164,
+      "crewPerGun": 14
+    },
+    {
+      "id": "long-42",
+      "name": "Long 42-pounder",
+      "pattern": "long",
+      "shotWeightLb": 42,
+      "massKg": 3400,
+      "costPounds": 245,
+      "barrelLengthM": 3.2,
+      "boreM": 0.18,
+      "crewPerGun": 15
+    },
+    {
+      "id": "medium-12",
+      "name": "Congreve 12-pounder",
+      "pattern": "medium",
+      "shotWeightLb": 12,
+      "massKg": 1050,
+      "costPounds": 80,
+      "barrelLengthM": 2.13,
+      "boreM": 0.118,
+      "crewPerGun": 5
+    },
+    {
+      "id": "medium-18",
+      "name": "Congreve 18-pounder",
+      "pattern": "medium",
+      "shotWeightLb": 18,
+      "massKg": 1400,
+      "costPounds": 105,
+      "barrelLengthM": 2.29,
+      "boreM": 0.135,
+      "crewPerGun": 7
+    },
+    {
+      "id": "medium-24",
+      "name": "Congreve 24-pounder",
+      "pattern": "medium",
+      "shotWeightLb": 24,
+      "massKg": 1700,
+      "costPounds": 130,
+      "barrelLengthM": 2.44,
+      "boreM": 0.149,
+      "crewPerGun": 9
+    },
+    {
+      "id": "carronade-12",
+      "name": "12-pounder carronade",
+      "pattern": "carronade",
+      "shotWeightLb": 12,
+      "massKg": 400,
+      "costPounds": 45,
+      "barrelLengthM": 0.99,
+      "boreM": 0.118,
+      "crewPerGun": 3
+    },
+    {
+      "id": "carronade-18",
+      "name": "18-pounder carronade",
+      "pattern": "carronade",
+      "shotWeightLb": 18,
+      "massKg": 550,
+      "costPounds": 58,
+      "barrelLengthM": 1.09,
+      "boreM": 0.135,
+      "crewPerGun": 4
+    },
+    {
+      "id": "carronade-24",
+      "name": "24-pounder carronade",
+      "pattern": "carronade",
+      "shotWeightLb": 24,
+      "massKg": 700,
+      "costPounds": 72,
+      "barrelLengthM": 1.19,
+      "boreM": 0.149,
+      "crewPerGun": 4
+    },
+    {
+      "id": "carronade-32",
+      "name": "32-pounder carronade",
+      "pattern": "carronade",
+      "shotWeightLb": 32,
+      "massKg": 900,
+      "costPounds": 92,
+      "barrelLengthM": 1.24,
+      "boreM": 0.164,
+      "crewPerGun": 5
+    },
+    {
+      "id": "carronade-68",
+      "name": "68-pounder carronade",
+      "pattern": "carronade",
+      "shotWeightLb": 68,
+      "massKg": 1800,
+      "costPounds": 150,
+      "barrelLengthM": 1.42,
+      "boreM": 0.21,
+      "crewPerGun": 7
+    },
+    {
+      "id": "swivel-half",
+      "name": "Half-pounder swivel",
+      "pattern": "swivel",
+      "shotWeightLb": 0.5,
+      "massKg": 60,
+      "costPounds": 8,
+      "barrelLengthM": 1.1,
+      "boreM": 0.037,
+      "crewPerGun": 1
+    }
+  ]
+}

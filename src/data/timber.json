@@ -1,0 +1,62 @@
+{
+  "species": [
+    {
+      "id": "baltic-fir",
+      "name": "Baltic fir",
+      "density": 0.55,
+      "costPerTonnePounds": 11,
+      "color": "#c9a874"
+    },
+    {
+      "id": "english-oak",
+      "name": "English oak",
+      "density": 0.75,
+      "costPerTonnePounds": 17,
+      "color": "#8a6a44"
+    },
+    {
+      "id": "live-oak",
+      "name": "Live oak",
+      "density": 0.9,
+      "costPerTonnePounds": 27,
+      "color": "#6b4f33"
+    }
+  ],
+  "zones": [
+    {
+      "id": "bottom",
+      "name": "Bottom planking",
+      "thicknessM": { "light": 0.075, "standard": 0.1, "heavy": 0.13 }
+    },
+    {
+      "id": "wales",
+      "name": "Wales",
+      "thicknessM": { "light": 0.15, "standard": 0.19, "heavy": 0.24 }
+    },
+    {
+      "id": "topsides",
+      "name": "Topside planking",
+      "thicknessM": { "light": 0.055, "standard": 0.075, "heavy": 0.1 }
+    },
+    {
+      "id": "bulwarks",
+      "name": "Bulwarks",
+      "thicknessM": { "light": 0.04, "standard": 0.06, "heavy": 0.085 }
+    },
+    {
+      "id": "deck",
+      "name": "Deck planking",
+      "thicknessM": { "light": 0.06, "standard": 0.08, "heavy": 0.105 }
+    }
+  ],
+  "structuralFactor": 2.7,
+  "nettings": {
+    "massKgPerMetre": 22,
+    "costPoundsPerMetre": 1.6
+  },
+  "copperSheathing": {
+    "massKgPerSquareMetre": 5.4,
+    "costPoundsPerSquareMetre": 3.1,
+    "speedBonusKn": 0.5
+  }
+}

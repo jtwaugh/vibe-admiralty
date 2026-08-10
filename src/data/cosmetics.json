@@ -1,0 +1,37 @@
+{
+  "figureheads": [
+    { "id": "none", "name": "Plain billet head", "massKg": 120, "costPounds": 30 },
+    { "id": "lion", "name": "Crowned lion", "massKg": 420, "costPounds": 240 },
+    { "id": "neptune", "name": "Neptune", "massKg": 560, "costPounds": 410 }
+  ],
+  "sternGalleries": [
+    { "id": "plain", "name": "Plain transom", "massKg": 900, "costPounds": 180 },
+    { "id": "gallery", "name": "Glazed stern gallery", "massKg": 2100, "costPounds": 760 }
+  ],
+  "paintSchemes": [
+    {
+      "id": "plain",
+      "name": "Plain black",
+      "hullColor": "#2b2723",
+      "stripeColor": "#2b2723",
+      "stripes": 0,
+      "costPounds": 90
+    },
+    {
+      "id": "nelson-chequer",
+      "name": "Nelson chequer",
+      "hullColor": "#22201d",
+      "stripeColor": "#d8b866",
+      "stripes": 1,
+      "costPounds": 160
+    },
+    {
+      "id": "spanish-red",
+      "name": "Spanish red",
+      "hullColor": "#4d1f1a",
+      "stripeColor": "#e0d6bd",
+      "stripes": 2,
+      "costPounds": 150
+    }
+  ]
+}
