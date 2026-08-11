@@ -349,6 +349,7 @@ export class ShipViewer {
     }
     this.rig?.dispose()
     this.rig = null
+    if (this.ship) setRudderAngle(this.ship.rudder, 0)
     this.shipRoot.position.set(0, -this.attitude.waterlineY, 0)
     this.yawGroup.rotation.set(0, 0, 0)
     this.mode = 'broadside'

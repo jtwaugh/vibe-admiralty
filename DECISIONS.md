@@ -221,3 +221,28 @@ Judgment calls made where SPEC.md is silent. One line of rationale each.
   of the forces; the heave and the wave-driven tilt are read from the same wave
   sum the shader runs and applied to the drawing only, so she sits in the water
   rather than on it.
+
+## Where the physics disagrees with ACCEPTANCE.md
+
+Two of the demo-two boxes describe behaviour the hydrostatics do not produce.
+The model was not bent to make them true; both are recorded here instead.
+
+- **"Roll period visibly long" at extreme beam does not follow.** Beam is what
+  gives a hull its metacentric height, and a stiff hull has a *short* roll
+  period, not a long one. Measured: the wide sloop (beam 11.2 m, GM 1.83 m)
+  rolls with a period of 7.9 s and is back inside two degrees five seconds after
+  a fifteen-degree displacement; the standard sloop (beam 8.6 m, GM 0.70 m)
+  takes 9.0 s and ten seconds. What the wide hull does do is everything else
+  SPEC §7 asks of her: she is nearly dead-beat in roll, she lies over at a
+  steady ten degrees under all plain sail and never stands back up, and she
+  turns in 5.2 of her own lengths where the standard sloop turns in 3.7 and
+  comes round only 22° in twenty seconds of full helm. That is a wallow; it is
+  not a long roll period, and no honest hull will give both.
+- **Twenty knots does not capsize the Lopside, and her gunports are not near
+  the water.** Every battery to port gives a frigate a 3.4° list, which puts
+  her lee sills 2.7 m clear; twenty knots on that side takes her to 10° and
+  about 2 m clear, and she holds it indefinitely. She dies at about 50 knots,
+  when the sills finally go under and she fills. The demo therefore shows both:
+  the list at rest and under 20 kn, and then the squall that actually finishes
+  her. Making 20 kn enough would have meant either a frigate with no stability
+  or a wind model that lies.
