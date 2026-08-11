@@ -161,11 +161,6 @@ export class Wake {
     this.strength.needsUpdate = true
   }
 
-  /** Wipe the track, so returning to the dock does not keep an old wake. */
-  reset() {
-    this.track = []
-  }
-
   dispose() {
     this.geometry.dispose()
     this.material.dispose()

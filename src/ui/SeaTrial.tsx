@@ -3,6 +3,7 @@ import type { SailTier } from '../data/schemas'
 import type { Design, SailState } from '../export/schema'
 import { buildTrialEnvironment, heelDeg, speedKn } from '../physics/integrate'
 import type { TrialStep } from '../physics/integrate'
+import type { ShipModel } from '../physics/masses'
 import { KNOTS_TO_MPS } from '../physics/wind'
 import { analyse, useDesignerStore } from '../state/store'
 import { WindDial } from './WindDial'
@@ -33,13 +34,17 @@ function compass(radians: number): string {
 
 export function SeaTrial({ design }: { design: Design }) {
   const store = useDesignerStore()
-  const { model, derived } = analyse(design)
 
-  // The hull cannot change while she is at sea, so the mesh and the stability
-  // curve are taken once at launch. Handing sails then costs nothing: it never
-  // touches the model, only the rig animator.
-  const launched = useRef(model)
-  const trialModel = launched.current
+  // The hull cannot change while she is at sea, so the model, the mesh and the
+  // stability curve are all taken once at launch. Handing sails costs nothing
+  // after that: it touches the rig animator and nothing else. Reading them off
+  // the live design instead would re-solve her hydrostatics on every click.
+  const launched = useRef<{ model: ShipModel; waterlineY: number } | null>(null)
+  if (!launched.current) {
+    const { model, derived } = analyse(design)
+    launched.current = { model, waterlineY: derived.upright.offset }
+  }
+  const trialModel = launched.current.model
   const env = useMemo(() => buildTrialEnvironment(trialModel), [trialModel])
 
   const [rudder, setRudder] = useState(0)
@@ -80,9 +85,10 @@ export function SeaTrial({ design }: { design: Design }) {
     [store.wind, rudder, design.rig.sails],
   )
 
+  const waterlineY = launched.current.waterlineY
   const attitude = useMemo(
-    () => ({ waterlineY: derived.upright.offset, heelRad: 0, trimRad: 0 }),
-    [derived],
+    () => ({ waterlineY, heelRad: 0, trimRad: 0 }),
+    [waterlineY],
   )
 
   const groupState = (tiers: SailTier[]): SailState => {

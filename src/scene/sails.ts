@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 import type { SailInstance, SailPoint } from '../physics/sailplan'
-import type { SailState } from '../export/schema'
 
 /**
  * Sail geometry and the billow that drives it (SPEC §7). Nothing here simulates
@@ -245,21 +244,6 @@ export function buildFurledSailGeometry(
       0,
     ),
   }
-}
-
-/**
- * Geometry for one sail in a settled state, which is what the designer draws.
- * The sea trial uses the two builders above and animates between them.
- */
-export function buildSailGeometry(
-  sail: SailInstance,
-  mastX: number,
-  mastStepY: number,
-  state: SailState,
-): SailShape {
-  return state === 'set'
-    ? buildSetSailGeometry(sail, mastX, mastStepY)
-    : buildFurledSailGeometry(sail, mastX, mastStepY)
 }
 
 /**

@@ -29,7 +29,7 @@ const WAVE_TRAINS: WaveTrain[] = [
 ]
 
 /** Wave height for a given wind, metres. A gentle sea even in a hard blow. */
-export function seaAmplitude(windSpeedKn: number): number {
+function seaAmplitude(windSpeedKn: number): number {
   return 0.22 + 0.05 * windSpeedKn
 }
 
@@ -37,7 +37,7 @@ export function seaAmplitude(windSpeedKn: number): number {
  * Height of the sea at a world point. This is the same sum the vertex shader
  * runs; the ship's visual heave and the wake both read it here.
  */
-export function seaHeight(
+function seaHeight(
   x: number,
   z: number,
   timeS: number,
@@ -58,7 +58,7 @@ export function seaHeight(
 }
 
 /** Slope of the sea at a world point, for tipping the ship with the swell. */
-export function seaSlope(
+function seaSlope(
   x: number,
   z: number,
   timeS: number,

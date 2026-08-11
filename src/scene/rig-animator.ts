@@ -43,11 +43,6 @@ export class RigAnimator {
     for (const entry of this.sails) this.apply(entry, 0)
   }
 
-  /** True while any sail is still being handed. */
-  get working(): boolean {
-    return this.sails.some((entry) => entry.progress > 0 && entry.progress < 1)
-  }
-
   /**
    * Advance every sail towards the state the crew have been ordered to, and
    * put the wind's pressure into each sail's own billow uniform.
