@@ -1,7 +1,18 @@
 import * as THREE from 'three'
+import type { SailState } from '../export/schema'
+import {
+  initialTrialState,
+  offsetAt,
+  stepTrial,
+} from '../physics/integrate'
+import type { TrialEnvironment, TrialState, TrialStep } from '../physics/integrate'
 import type { ShipModel } from '../physics/masses'
+import type { WindConditions } from '../physics/wind'
+import { Ocean } from './ocean'
+import { RigAnimator, setRudderAngle } from './rig-animator'
 import { buildShipMesh } from './ship-mesh'
 import type { ShipMesh } from './ship-mesh'
+import { BowWave, Wake } from './wake'
 
 export type CameraMode = 'broadside' | 'orbit'
 
@@ -25,9 +36,31 @@ export type MarkerProjection = {
   visible: boolean
 }
 
+/** What the helm and the sail handlers are asking for, moment to moment. */
+export type TrialInputs = {
+  wind: WindConditions
+  rudder: number
+  sails: Record<string, SailState>
+}
+
 /** A long lens keeps the broadside view close to a true elevation. */
 const BROADSIDE_FOV = 13
 const ORBIT_FOV = 26
+/** The sea trial wants to see her whole attitude, not read her like a drawing. */
+const TRIAL_FOV = 30
+/**
+ * Abaft the starboard beam, which is where the sun is: from ahead the sails are
+ * edge on and lit from behind, and the whole rig reads as grey card. From here
+ * the light rakes across the canvas and every sail shows its belly.
+ */
+const TRIAL_BEARING = -0.42
+
+/** The trial is integrated at a fixed step, however fast the frames come. */
+const PHYSICS_STEP = 0.02
+const MAX_STEPS_PER_FRAME = 6
+
+/** How much of the swell shows in the ship's attitude, as an angle multiplier. */
+const WAVE_MOTION = 0.55
 
 function skyTexture(): THREE.CanvasTexture | null {
   const canvas = document.createElement('canvas')
@@ -53,8 +86,18 @@ export class ShipViewer {
   private renderer: THREE.WebGLRenderer
   private camera: THREE.PerspectiveCamera
   private ship: ShipMesh | null = null
+  /** World place and sinkage. Rotations hang below it, so the waterplane the
+   * hydrostatics solved for lies exactly on the sea at any heel. */
+  private shipRoot = new THREE.Group()
+  private yawGroup = new THREE.Group()
   private shipPivot = new THREE.Group()
-  private sea: THREE.Mesh
+  private sun: THREE.DirectionalLight
+  private fill: THREE.DirectionalLight
+  private dock: THREE.Mesh
+  private ocean: Ocean | null = null
+  private wake: Wake | null = null
+  private bowWave: BowWave | null = null
+  private rig: RigAnimator | null = null
   private frame = 0
   private mode: CameraMode = 'broadside'
   private orbitAngle = 0.7
@@ -72,11 +115,21 @@ export class ShipViewer {
   private dragMoved = 0
   private lastPointerX = 0
   private markersDirty = true
+  private clock = new THREE.Clock()
+
+  // Sea trial
+  private trial: TrialEnvironment | null = null
+  private trialState: TrialState | null = null
+  private inputs: TrialInputs | null = null
+  private accumulator = 0
+  private attitude: ViewerAttitude = { waterlineY: 0, heelRad: 0, trimRad: 0 }
 
   /** Called when the user clicks a mount marker on the hull. */
   onMountClick: ((socketId: string) => void) | null = null
   /** Called when marker screen positions change, for the DOM overlay. */
   onMarkersMoved: ((markers: MarkerProjection[]) => void) | null = null
+  /** Called with the trial's state every frame it advances. */
+  onTelemetry: ((step: TrialStep) => void) | null = null
 
   constructor(private canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({
@@ -94,36 +147,49 @@ export class ShipViewer {
     this.scene.background = skyTexture()
     this.scene.fog = new THREE.Fog(new THREE.Color('#b9cdda'), 700, 3200)
 
-    this.camera = new THREE.PerspectiveCamera(ORBIT_FOV, 1, 1, 6000)
-    this.scene.add(this.shipPivot)
+    this.camera = new THREE.PerspectiveCamera(ORBIT_FOV, 1, 1, 12000)
+    this.shipRoot.add(this.yawGroup)
+    this.yawGroup.add(this.shipPivot)
+    this.scene.add(this.shipRoot)
 
-    const sun = new THREE.DirectionalLight(0xfff2dd, 2.6)
-    sun.position.set(-90, 140, 120)
-    sun.castShadow = true
-    sun.shadow.mapSize.set(2048, 2048)
-    sun.shadow.camera.near = 20
-    sun.shadow.camera.far = 460
+    this.sun = new THREE.DirectionalLight(0xfff2dd, 2.6)
+    this.sun.position.set(-90, 140, 120)
+    this.sun.castShadow = true
+    this.sun.shadow.mapSize.set(2048, 2048)
+    this.sun.shadow.camera.near = 20
+    this.sun.shadow.camera.far = 460
     const extent = 60
-    sun.shadow.camera.left = -extent
-    sun.shadow.camera.right = extent
-    sun.shadow.camera.top = extent
-    sun.shadow.camera.bottom = -extent
-    sun.shadow.bias = -0.0012
-    this.scene.add(sun)
+    this.sun.shadow.camera.left = -extent
+    this.sun.shadow.camera.right = extent
+    this.sun.shadow.camera.top = extent
+    this.sun.shadow.camera.bottom = -extent
+    this.sun.shadow.bias = -0.0012
+    this.scene.add(this.sun)
+    this.scene.add(this.sun.target)
     this.scene.add(new THREE.HemisphereLight(0xbcd6ea, 0x2b4055, 1.1))
 
-    const seaMaterial = new THREE.MeshStandardMaterial({
+    // Light coming back off the water. Without it the side of the ship the sun
+    // is not on goes to a flat near-black, and half of every orbit is dead.
+    this.fill = new THREE.DirectionalLight(0xa8c4d8, 0.75)
+    this.fill.position.set(80, 45, -120)
+    this.scene.add(this.fill)
+    this.scene.add(this.fill.target)
+
+    // The dock's water: flat, because the designer view is meant to read like
+    // an elevation and because the tests measure the ship against it. The sea
+    // trial swaps in the real ocean.
+    const dockMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color('#1d5a76'),
       roughness: 0.28,
       metalness: 0.1,
     })
-    this.sea = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000), seaMaterial)
-    this.sea.rotation.x = -Math.PI / 2
+    this.dock = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000), dockMaterial)
+    this.dock.rotation.x = -Math.PI / 2
     // The sea takes no shadow: a shadow map stretched over a 6 km plane at a
     // grazing sun angle streaks and shimmers, and open water would not hold a
     // hard shadow anyway. The ship still shadows herself.
-    this.sea.receiveShadow = false
-    this.scene.add(this.sea)
+    this.dock.receiveShadow = false
+    this.scene.add(this.dock)
 
     this.onPointerDown = this.onPointerDown.bind(this)
     this.onPointerMove = this.onPointerMove.bind(this)
@@ -160,13 +226,18 @@ export class ShipViewer {
     // underwater body. See DECISIONS.md.
     this.eyeY = (model.hull.railY - attitude.waterlineY) * 0.55
     this.markersDirty = true
+
+    if (this.trial) this.attachRig(model)
   }
 
   setAttitude(attitude: ViewerAttitude) {
+    this.attitude = attitude
     if (!this.ship) return
-    // The ship rotates about its own centre of flotation, then drops so the
-    // load waterline sits on the sea surface.
-    this.ship.group.position.set(0, -attitude.waterlineY, 0)
+    // The rotations are applied below the world placement, so the waterplane
+    // the hydrostatics solved for lands on the sea at any angle of heel.
+    this.ship.group.position.set(0, 0, 0)
+    this.shipRoot.position.set(0, -attitude.waterlineY, 0)
+    this.yawGroup.rotation.set(0, 0, 0)
     this.shipPivot.rotation.set(0, 0, 0)
     this.shipPivot.rotateX(attitude.heelRad)
     this.shipPivot.rotateZ(attitude.trimRad)
@@ -203,6 +274,160 @@ export class ShipViewer {
     }
   }
 
+  // -------------------------------------------------------------------------
+  // Sea trial
+  // -------------------------------------------------------------------------
+
+  /** Put her in open water and start the clock. */
+  startSeaTrial(env: TrialEnvironment, inputs: TrialInputs) {
+    this.trial = env
+    this.trialState = initialTrialState(env)
+    this.inputs = inputs
+    this.accumulator = 0
+
+    this.dock.visible = false
+    this.ocean?.dispose()
+    this.ocean = new Ocean({
+      sunDirection: this.sun.position.clone(),
+      fog: this.scene.fog as THREE.Fog | null,
+    })
+    this.scene.add(this.ocean.group)
+    this.ocean.setWind(inputs.wind.directionRad, inputs.wind.speedKn)
+
+    this.wake?.dispose()
+    this.wake = new Wake(env.model.hull.params.beam)
+    this.scene.add(this.wake.group)
+
+    this.bowWave?.dispose()
+    this.bowWave = new BowWave(
+      env.model.hull.length,
+      env.model.hull.params.beam,
+      offsetAt(env.curve, 0),
+    )
+    this.shipPivot.add(this.bowWave.group)
+
+    this.setMarkersVisible(false)
+    this.attachRig(env.model)
+    this.orbitAngle = TRIAL_BEARING
+    this.mode = 'orbit'
+  }
+
+  private attachRig(model: ShipModel) {
+    if (!this.ship) return
+    this.rig?.dispose()
+    this.rig = new RigAnimator(
+      this.ship.sails,
+      this.inputs?.sails ?? model.design.rig.sails,
+    )
+  }
+
+  setTrialInputs(inputs: TrialInputs) {
+    this.inputs = inputs
+    this.ocean?.setWind(inputs.wind.directionRad, inputs.wind.speedKn)
+  }
+
+  /** Back to the dock: flat water, no wake, sails as the design has them. */
+  stopSeaTrial() {
+    this.trial = null
+    this.trialState = null
+    this.inputs = null
+    this.dock.visible = true
+    if (this.ocean) {
+      this.scene.remove(this.ocean.group)
+      this.ocean.dispose()
+      this.ocean = null
+    }
+    if (this.wake) {
+      this.scene.remove(this.wake.group)
+      this.wake.dispose()
+      this.wake = null
+    }
+    if (this.bowWave) {
+      this.shipPivot.remove(this.bowWave.group)
+      this.bowWave.dispose()
+      this.bowWave = null
+    }
+    this.rig?.dispose()
+    this.rig = null
+    this.shipRoot.position.set(0, -this.attitude.waterlineY, 0)
+    this.yawGroup.rotation.set(0, 0, 0)
+    this.mode = 'broadside'
+  }
+
+  private advanceTrial(dt: number) {
+    const env = this.trial
+    const inputs = this.inputs
+    if (!env || !inputs || !this.trialState) return
+
+    this.accumulator += dt
+    let steps = 0
+    let latest: TrialStep | null = null
+    while (this.accumulator >= PHYSICS_STEP && steps < MAX_STEPS_PER_FRAME) {
+      latest = stepTrial(env, this.trialState, inputs, PHYSICS_STEP)
+      this.trialState = latest.state
+      this.accumulator -= PHYSICS_STEP
+      steps++
+    }
+    // A frame that arrives very late is not allowed to run the ship forward
+    // faster than real time; drop the backlog instead.
+    if (this.accumulator > PHYSICS_STEP * MAX_STEPS_PER_FRAME) this.accumulator = 0
+    if (!latest) return
+
+    const state = this.trialState
+    const time = this.clock.elapsedTime
+    const ocean = this.ocean
+
+    // Her attitude: the hydrostatics for heel and float, the swell for the
+    // rest. SPEC §7 keeps waves out of the forces, so this part is only ever
+    // a picture.
+    let waveHeel = 0
+    let waveTrim = 0
+    let heave = 0
+    if (ocean) {
+      heave = ocean.heightAt(state.positionX, state.positionZ, time)
+      const slope = ocean.slopeAt(state.positionX, state.positionZ, time)
+      const forward = { x: Math.cos(state.headingRad), z: Math.sin(state.headingRad) }
+      const starboard = { x: -Math.sin(state.headingRad), z: Math.cos(state.headingRad) }
+      waveTrim = Math.atan(slope.dx * forward.x + slope.dz * forward.z) * WAVE_MOTION
+      waveHeel = -Math.atan(slope.dx * starboard.x + slope.dz * starboard.z) * WAVE_MOTION
+    }
+
+    this.shipRoot.position.set(
+      state.positionX,
+      heave - offsetAt(env.curve, state.heelRad) - state.founderedM,
+      state.positionZ,
+    )
+    // A rotation of +y in three.js turns +x towards -z, so a heading measured
+    // from +x towards +z is its negative.
+    this.yawGroup.rotation.set(0, -state.headingRad, 0)
+    this.shipPivot.rotation.set(0, 0, 0)
+    this.shipPivot.rotateX(state.heelRad + waveHeel)
+    this.shipPivot.rotateZ(state.trimRad + waveTrim)
+
+    // The sun and its shadow camera travel with her, or she sails out of them.
+    this.sun.position.set(state.positionX - 90, 140, state.positionZ + 120)
+    this.sun.target.position.set(state.positionX, 0, state.positionZ)
+    this.fill.position.set(state.positionX + 80, 45, state.positionZ - 120)
+    this.fill.target.position.set(state.positionX, 0, state.positionZ)
+
+    ocean?.update(time, state.positionX, state.positionZ)
+    this.wake?.update(
+      state.positionX,
+      state.positionZ,
+      state.headingRad,
+      state.speedMps,
+      time,
+    )
+    this.bowWave?.setSpeed(state.sunk ? 0 : state.speedMps)
+
+    // The rig is braced and filled from the same apparent wind the sails were
+    // pushed by, not from a second copy of it.
+    this.rig?.update(dt, inputs.sails, latest.load.pressureBySail, latest.load.apparent)
+    if (this.ship) setRudderAngle(this.ship.rudder, inputs.rudder)
+
+    this.onTelemetry?.(latest)
+  }
+
   resize(width: number, height: number) {
     this.renderer.setSize(width, height, false)
     this.camera.aspect = width / Math.max(1, height)
@@ -219,6 +444,32 @@ export class ShipViewer {
   }
 
   private updateCamera() {
+    if (this.trial && this.trialState) {
+      // The eye keeps her in frame and holds its bearing on the world, so a
+      // turn is something you watch her do rather than something the sea does.
+      this.camera.fov = TRIAL_FOV
+      this.camera.updateProjectionMatrix()
+      const { positionX, positionZ, heelRad, founderedM } = this.trialState
+      // A ship on her beam ends is a long low thing, not a tall one: the eye
+      // comes down and in as she goes over, or the money shot ends up a speck
+      // at the bottom of the frame with the camera staring at empty sky.
+      const upright = Math.abs(Math.cos(heelRad))
+      // A ship laid flat is no smaller than an upright one, she is only lower:
+      // her rig is as long lying down as it was standing up, so the eye keeps
+      // its distance and only drops.
+      const distance = this.fitRadius(TRIAL_FOV) * 1.2
+      const lookY = this.frameHeight * (0.08 + 0.26 * upright) - founderedM
+      this.camera.position.set(
+        positionX + Math.sin(this.orbitAngle) * distance,
+        // The eye does not follow her down: it stays above the sea and watches
+        // her go, which is the only way the last of it reads at all.
+        Math.max(6, this.frameHeight * (0.14 + 0.3 * upright)),
+        positionZ + Math.cos(this.orbitAngle) * distance,
+      )
+      this.camera.lookAt(positionX, lookY, positionZ)
+      return
+    }
+
     const fov = this.mode === 'broadside' ? BROADSIDE_FOV : ORBIT_FOV
     if (this.camera.fov !== fov) {
       this.camera.fov = fov
@@ -302,7 +553,7 @@ export class ShipViewer {
       const delta = event.clientX - this.lastPointerX
       this.lastPointerX = event.clientX
       this.dragMoved += Math.abs(delta)
-      if (this.mode === 'orbit' && this.dragMoved > 3) {
+      if ((this.mode === 'orbit' || this.trial) && this.dragMoved > 3) {
         this.setOrbitAngle(this.orbitAngle - delta * 0.006)
       }
       return
@@ -321,10 +572,12 @@ export class ShipViewer {
 
   private loop() {
     if (this.disposed) return
+    const dt = Math.min(0.1, this.clock.getDelta())
     const { clientWidth, clientHeight } = this.canvas
     if (clientWidth > 0 && this.canvas.width !== Math.floor(clientWidth * this.renderer.getPixelRatio())) {
       this.resize(clientWidth, clientHeight)
     }
+    if (this.trial) this.advanceTrial(dt)
     this.updateCamera()
     this.renderer.render(this.scene, this.camera)
     if (this.markersDirty) {
@@ -341,7 +594,10 @@ export class ShipViewer {
     this.canvas.removeEventListener('pointermove', this.onPointerMove)
     window.removeEventListener('pointerup', this.onPointerUp)
     this.ship?.dispose()
-    this.sea.geometry.dispose()
+    this.ocean?.dispose()
+    this.wake?.dispose()
+    this.bowWave?.dispose()
+    this.dock.geometry.dispose()
     this.renderer.dispose()
   }
 }

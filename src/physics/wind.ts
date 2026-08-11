@@ -17,8 +17,12 @@ import type { SailInstance } from './sailplan'
 export const AIR_DENSITY = 1.225
 export const KNOTS_TO_MPS = 0.514444
 
-/** Dynamic pressure at which a sail is drawing as full as it ever draws. */
-const FULL_PRESSURE_PA = 0.5 * AIR_DENSITY * 12 * 12
+/**
+ * Pressure at which a sail is drawing as full as it ever draws. It is low,
+ * because canvas is not a balloon: a sail is either full or it is shaking, and
+ * anything above a light air has it as full as it is going to get.
+ */
+const FULL_PRESSURE_PA = 14
 
 export type WindConditions = {
   /**

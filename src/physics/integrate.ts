@@ -361,8 +361,11 @@ export type TrialState = {
   headingRad: number
   yawRateRadS: number
   speedMps: number
-  /** Distance run, metres; the ocean and the wake are drawn from this. */
+  /** Distance run, metres. */
   distanceM: number
+  /** Where she is on the sea, metres; the wake is laid down along this track. */
+  positionX: number
+  positionZ: number
   /** Water taken in through submerged gunports, kilograms. */
   floodedKg: number
   /** Height of the waterplane above her baseline: where to draw the sea. */
@@ -409,6 +412,8 @@ export function initialTrialState(env: TrialEnvironment, headingRad = 0): TrialS
     yawRateRadS: 0,
     speedMps: 0,
     distanceM: 0,
+    positionX: 0,
+    positionZ: 0,
     floodedKg: 0,
     waterlineY: offsetAt(env.curve, heelRad),
     trimRad: env.curve.trimRad,
@@ -574,6 +579,8 @@ export function stepTrial(
       yawRateRadS: yawRate,
       speedMps,
       distanceM: state.distanceM + speedMps * dtSeconds,
+      positionX: state.positionX + speedMps * Math.cos(state.headingRad) * dtSeconds,
+      positionZ: state.positionZ + speedMps * Math.sin(state.headingRad) * dtSeconds,
       floodedKg,
       waterlineY: waterline,
       trimRad: curve.trimRad,

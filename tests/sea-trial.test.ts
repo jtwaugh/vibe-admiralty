@@ -21,7 +21,6 @@ import type { Design, SailState } from '../src/export/schema'
  * of these claims; these tests are the half that can fail loudly.
  */
 
-const CALM = { directionRad: 0, speedKn: 0 }
 /** A wind out of the starboard beam, which lays a ship over to port. */
 const FROM_STARBOARD = Math.PI / 2
 
@@ -191,12 +190,10 @@ describe('demo two: the abomination', () => {
   it('goes over within twenty seconds of setting everything, unprompted', () => {
     const { env, state } = launch(narrow)
     const controlSet = controls(narrow, 25)
-    let step = { state, load: null, portsUnder: 0 } as ReturnType<typeof stepTrial>
     let capsizedAt = Infinity
     let current = state
     for (let t = 0; t < 20; t += 0.02) {
-      step = stepTrial(env, current, controlSet, 0.02)
-      current = step.state
+      current = stepTrial(env, current, controlSet, 0.02).state
       if (current.capsized && capsizedAt === Infinity) capsizedAt = current.timeS
     }
     expect(capsizedAt).toBeLessThan(20)

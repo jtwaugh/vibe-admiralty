@@ -152,7 +152,6 @@ export type ShipMaterials = {
   timber: THREE.MeshStandardMaterial
   iron: THREE.MeshStandardMaterial
   brass: THREE.MeshStandardMaterial
-  canvas: THREE.MeshStandardMaterial
   furledCanvas: THREE.MeshStandardMaterial
   gilding: THREE.MeshStandardMaterial
   glass: THREE.MeshStandardMaterial
@@ -210,14 +209,6 @@ export function createShipMaterials(options: PaintOptions): ShipMaterials {
     transparent: true,
     opacity: 0.85,
   })
-  // Sailcloth is thin: it is lit from both sides and shows through a little.
-  const canvasCloth = new THREE.MeshStandardMaterial({
-    color: new THREE.Color('#e6dcc4'),
-    roughness: 0.95,
-    metalness: 0,
-    side: THREE.DoubleSide,
-  })
-
   // Mount markers: a brass ring that reads against black topsides and pale sky
   // alike, and glows when its modal is open.
   const marker = new THREE.MeshStandardMaterial({
@@ -274,7 +265,6 @@ export function createShipMaterials(options: PaintOptions): ShipMaterials {
     timber,
     iron,
     brass,
-    canvas: canvasCloth,
     furledCanvas,
     gilding,
     glass,
@@ -292,7 +282,6 @@ export function createShipMaterials(options: PaintOptions): ShipMaterials {
         timber,
         iron,
         brass,
-        canvasCloth,
         furledCanvas,
         gilding,
         glass,

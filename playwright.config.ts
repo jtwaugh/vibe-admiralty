@@ -18,6 +18,8 @@ export default defineConfig({
     {
       name: 'shots',
       testMatch: /.*\.shots\.ts/,
+      // The sea trial demos are watched in real time; they need the room.
+      timeout: 240_000,
       // Demo screenshots are taken at retina scale, because they are looked at.
       use: {
         ...devices['Desktop Chrome'],

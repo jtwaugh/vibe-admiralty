@@ -11,6 +11,7 @@ import type { DerivedStats } from '../physics/derived'
 import { buildShipModel } from '../physics/masses'
 import type { ShipModel } from '../physics/masses'
 import type { CameraMode } from '../scene/viewer'
+import type { WindConditions } from '../physics/wind'
 import { defaultDesign } from './defaults'
 
 export type Screen = 'hull-select' | 'designer' | 'sea-trial'
@@ -25,6 +26,11 @@ type DesignerStore = {
   cameraMode: CameraMode
   /** Socket id whose mount modal is open, if any. */
   activeMountId: string | null
+  /**
+   * The weather for the sea trial. It is not part of the design and does not
+   * export: two ships tried in different winds are still the same two ships.
+   */
+  wind: WindConditions
 
   selectPreset(presetId: string): void
   backToHulls(): void
@@ -42,6 +48,7 @@ type DesignerStore = {
   setCosmetic<K extends keyof CosmeticsDesign>(key: K, value: CosmeticsDesign[K]): void
   setMount(socketId: string, patch: Partial<MountConfig>): void
 
+  setWind(patch: Partial<WindConditions>): void
   openMount(socketId: string): void
   closeMount(): void
   setCameraMode(mode: CameraMode): void
@@ -58,6 +65,8 @@ export const useDesignerStore = create<DesignerStore>((set) => {
     design: null,
     cameraMode: 'broadside',
     activeMountId: null,
+    // A working breeze on the starboard beam, which is where a sea trial starts.
+    wind: { directionRad: Math.PI / 2, speedKn: 15 },
 
     selectPreset: (presetId) =>
       set({ screen: 'designer', design: defaultDesign(presetId), activeMountId: null }),
@@ -101,6 +110,7 @@ export const useDesignerStore = create<DesignerStore>((set) => {
         }
       }),
 
+    setWind: (patch) => set((state) => ({ wind: { ...state.wind, ...patch } })),
     openMount: (socketId) => set({ activeMountId: socketId }),
     closeMount: () => set({ activeMountId: null }),
     setCameraMode: (cameraMode) => set({ cameraMode }),

@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
+import type { TrialEnvironment, TrialStep } from '../physics/integrate'
 import type { ShipModel } from '../physics/masses'
 import { ShipViewer } from '../scene/viewer'
-import type { CameraMode, MarkerProjection, ViewerAttitude } from '../scene/viewer'
+import type {
+  CameraMode,
+  MarkerProjection,
+  TrialInputs,
+  ViewerAttitude,
+} from '../scene/viewer'
 
 type Props = {
   model: ShipModel
@@ -13,6 +19,10 @@ type Props = {
   onMountClick?(socketId: string): void
   /** Label for each socket, used as the marker's tooltip. */
   mountLabels?: Record<string, string>
+  /** Present only in the sea trial: she is afloat and the clock is running. */
+  trial?: TrialEnvironment | null
+  trialInputs?: TrialInputs
+  onTelemetry?(step: TrialStep): void
 }
 
 export function Viewer({
@@ -23,19 +33,27 @@ export function Viewer({
   activeMountId = null,
   onMountClick,
   mountLabels = {},
+  trial = null,
+  trialInputs,
+  onTelemetry,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const viewerRef = useRef<ShipViewer | null>(null)
   const clickRef = useRef(onMountClick)
+  const telemetryRef = useRef(onTelemetry)
+  const inputsRef = useRef(trialInputs)
   const [projections, setProjections] = useState<MarkerProjection[]>([])
 
   clickRef.current = onMountClick
+  telemetryRef.current = onTelemetry
+  inputsRef.current = trialInputs
 
   useEffect(() => {
     if (!canvasRef.current) return
     const viewer = new ShipViewer(canvasRef.current)
     viewer.onMountClick = (socketId) => clickRef.current?.(socketId)
     viewer.onMarkersMoved = setProjections
+    viewer.onTelemetry = (step) => telemetryRef.current?.(step)
     viewerRef.current = viewer
     return () => {
       viewer.dispose()
@@ -50,13 +68,29 @@ export function Viewer({
     // The mesh is rebuilt whenever the design changes; attitude alone is cheap.
   }, [model])
 
+  // Launching and returning to the dock. This runs after the model effect, so
+  // there is always a ship in the scene for the trial to take charge of.
   useEffect(() => {
-    viewerRef.current?.setAttitude(attitude)
-  }, [attitude])
+    const viewer = viewerRef.current
+    if (!viewer) return
+    if (trial && inputsRef.current) {
+      viewer.startSeaTrial(trial, inputsRef.current)
+      return () => viewer.stopSeaTrial()
+    }
+    return undefined
+  }, [trial])
 
   useEffect(() => {
-    viewerRef.current?.setCameraMode(cameraMode)
-  }, [cameraMode])
+    if (trial && trialInputs) viewerRef.current?.setTrialInputs(trialInputs)
+  }, [trial, trialInputs])
+
+  useEffect(() => {
+    if (!trial) viewerRef.current?.setAttitude(attitude)
+  }, [attitude, trial])
+
+  useEffect(() => {
+    if (!trial) viewerRef.current?.setCameraMode(cameraMode)
+  }, [cameraMode, trial])
 
   useEffect(() => {
     viewerRef.current?.setMarkersVisible(markers)

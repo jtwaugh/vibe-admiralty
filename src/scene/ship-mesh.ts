@@ -8,8 +8,14 @@ import type { ShipModel } from '../physics/masses'
 import { buildFigurehead, buildRudder, buildSternGallery } from './fittings'
 import { createShipMaterials } from './materials'
 import type { ShipMaterials } from './materials'
-import { buildSailGeometry } from './sails'
-import type { SailPoint } from '../physics/sailplan'
+import {
+  buildFurledSailGeometry,
+  buildSetSailGeometry,
+  createSailMaterial,
+  isSquareSail,
+  setBillow,
+} from './sails'
+import type { SailInstance, SailPoint } from '../physics/sailplan'
 
 /**
  * Node names are part of the export contract (SPEC §8): a future engine drives
@@ -23,6 +29,22 @@ export const NODE_NAMES = {
   sail: (mast: string, tier: string) => `Sail_${mast}_${tier}`,
   gunport: (deck: number, index: number) => `Gunport_${deck}_${index}`,
   mount: (socketId: string) => `Mount_${socketId}`,
+}
+
+/**
+ * Everything the sea trial needs to work one sail: the cloth, the bundle it
+ * rolls into, and the material whose billow uniform the wind drives.
+ */
+export type SailHandle = {
+  sail: SailInstance
+  mastX: number
+  mastStepY: number
+  /** The named contract node; both states hang under it. */
+  group: THREE.Group
+  cloth: THREE.Mesh
+  furl: THREE.Mesh
+  material: THREE.MeshStandardMaterial
+  square: boolean
 }
 
 function toBufferGeometry(data: MeshData): THREE.BufferGeometry {
@@ -98,7 +120,58 @@ function buildGun(gunId: string, materials: ShipMaterials): THREE.Group | null {
   return group
 }
 
-function buildMasts(model: ShipModel, materials: ShipMaterials): THREE.Group {
+/**
+ * One sail as a named contract node with both its states under it: the cloth
+ * and the bundle it rolls into. The sea trial fades between them; the designer
+ * shows whichever the design asks for, and the glTF exporter, which skips what
+ * is not visible, sees exactly one of them.
+ */
+function buildSail(
+  sail: SailInstance,
+  socket: { x: number; stepY: number },
+  state: 'set' | 'furled',
+  materials: ShipMaterials,
+): SailHandle {
+  const group = new THREE.Group()
+  group.name = NODE_NAMES.sail(sail.mastLabel, sail.tier)
+  const material = createSailMaterial()
+  // At the dock there is no wind in the sea trial's sense, but a sail that is
+  // set should still look like cloth and not like a sheet of card.
+  setBillow(material, 0.35)
+
+  const set = buildSetSailGeometry(sail, socket.x, socket.stepY)
+  const cloth = mesh(set.geometry, material, 'Cloth')
+  cloth.position.copy(set.position)
+  cloth.visible = state === 'set'
+  // Canvas is drawn displaced by the billow in its own vertex shader, and the
+  // shadow pass is not: letting a sail take that mismatched shadow speckles the
+  // whole rig. It still casts one on the deck below.
+  cloth.receiveShadow = false
+  group.add(cloth)
+
+  const rolled = buildFurledSailGeometry(sail, socket.x, socket.stepY)
+  const furl = mesh(rolled.geometry, materials.furledCanvas, 'Furl')
+  furl.position.copy(rolled.position)
+  furl.visible = state !== 'set'
+  group.add(furl)
+
+  return {
+    sail,
+    mastX: socket.x,
+    mastStepY: socket.stepY,
+    group,
+    cloth,
+    furl,
+    material,
+    square: isSquareSail(sail),
+  }
+}
+
+function buildMasts(
+  model: ShipModel,
+  materials: ShipMaterials,
+  handles: SailHandle[],
+): THREE.Group {
   const group = new THREE.Group()
   group.name = 'Masts'
   const beam = model.hull.params.beam
@@ -154,26 +227,24 @@ function buildMasts(model: ShipModel, materials: ShipMaterials): THREE.Group {
             mast.add(boom)
           }
         }
-      } else {
+      }
+
+      const handle = buildSail(sail, socket, state, materials)
+      if (handle.square) {
         const yard = mesh(
           spar(sail.yardHalfSpan * 2, beam * 0.014, beam * 0.007),
           materials.timber,
           NODE_NAMES.yard(sail.tier),
         )
-        // Spars are built along +y; roll this one to lie athwartships.
+        // Spars are built along +y; roll this one to lie athwartships. It hangs
+        // inside the sail's own node so that bracing the yards round turns the
+        // spar and its canvas together.
         yard.rotation.x = Math.PI / 2
         yard.position.set(0, sail.yardY - socket.stepY, -sail.yardHalfSpan)
-        mast.add(yard)
+        handle.group.add(yard)
       }
-
-      const shape = buildSailGeometry(sail, socket.x, socket.stepY, state)
-      const cloth = mesh(
-        shape.geometry,
-        state === 'set' ? materials.canvas : materials.furledCanvas,
-        NODE_NAMES.sail(sail.mastLabel, sail.tier),
-      )
-      cloth.position.copy(shape.position)
-      mast.add(cloth)
+      handles.push(handle)
+      mast.add(handle.group)
     }
 
     group.add(mast)
@@ -422,6 +493,10 @@ export type ShipMesh = {
   /** Raycast targets for the mount markers; userData.socketId identifies them. */
   markerTargets: THREE.Mesh[]
   markers: THREE.Group
+  /** One per sail, for the sea trial to set, furl and fill. */
+  sails: SailHandle[]
+  /** The blade astern, which the tiller swings. */
+  rudder: THREE.Mesh
   dispose(): void
 }
 
@@ -459,8 +534,10 @@ export function buildShipMesh(model: ShipModel, waterlineY: number): ShipMesh {
   if (figurehead) hullGroup.add(figurehead)
 
   group.add(hullGroup)
-  group.add(buildRudder(model, materials))
-  group.add(buildMasts(model, materials))
+  const rudder = buildRudder(model, materials)
+  group.add(rudder)
+  const sails: SailHandle[] = []
+  group.add(buildMasts(model, materials, sails))
   group.add(buildGuns(model, materials))
   group.add(buildRigging(model, materials.rigging))
 
@@ -473,10 +550,13 @@ export function buildShipMesh(model: ShipModel, waterlineY: number): ShipMesh {
     materials,
     markerTargets: markers.targets,
     markers: markers.group,
+    sails,
+    rudder,
     dispose() {
       group.traverse((object) => {
         if (object instanceof THREE.Mesh) object.geometry.dispose()
       })
+      for (const handle of sails) handle.material.dispose()
       materials.dispose()
     },
   }

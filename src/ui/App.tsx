@@ -1,15 +1,19 @@
 import { Designer } from './Designer'
 import { HullSelect } from './HullSelect'
+import { SeaTrial } from './SeaTrial'
 import { useDesignerStore } from '../state/store'
 
 /**
- * Two screens in phase 2: pick a hull, then design her. The sea trial (SPEC §3)
- * is phase 3 and its Launch button is disabled until then.
+ * The three screens of SPEC §3: pick a hull, design her, then take her out and
+ * see whether the design floats.
  */
 export function App() {
   const screen = useDesignerStore((state) => state.screen)
   const design = useDesignerStore((state) => state.design)
 
-  if (screen === 'designer' && design) return <Designer design={design} />
+  if (design) {
+    if (screen === 'sea-trial') return <SeaTrial design={design} />
+    if (screen === 'designer') return <Designer design={design} />
+  }
   return <HullSelect />
 }

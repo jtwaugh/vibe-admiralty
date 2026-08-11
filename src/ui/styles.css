@@ -858,3 +858,147 @@ select {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* --- Sea trial ---------------------------------------------------------- */
+
+.ship-name-plate {
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  padding: 0.35rem 0.2rem;
+}
+
+.trial-clock {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  font-size: 0.9rem;
+}
+
+.trial-group {
+  padding: 0.9rem 1rem 1.1rem;
+  border-bottom: 1px solid var(--faint);
+}
+
+.trial-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 0 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+
+.trial-heading-note {
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.wind-dial {
+  display: block;
+  margin: 0 auto 0.8rem;
+  cursor: grab;
+  touch-action: none;
+}
+
+.wind-dial:active {
+  cursor: grabbing;
+}
+
+.dial-face {
+  fill: rgba(10, 18, 25, 0.72);
+  stroke: var(--brass-dim);
+  stroke-width: 1;
+}
+
+.dial-tick {
+  stroke: rgba(236, 226, 205, 0.28);
+  stroke-width: 1;
+}
+
+.dial-tick.major {
+  stroke: var(--brass);
+  stroke-width: 1.6;
+}
+
+.dial-ship {
+  fill: rgba(236, 226, 205, 0.34);
+  stroke: rgba(236, 226, 205, 0.55);
+  stroke-width: 1;
+}
+
+.dial-arrow {
+  stroke: var(--brass);
+  stroke-width: 2;
+}
+
+.dial-arrow-head {
+  fill: var(--brass);
+}
+
+.dial-grip {
+  fill: var(--brass);
+  stroke: var(--abyss);
+  stroke-width: 1.5;
+}
+
+.sail-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.3rem;
+  background: transparent;
+  border: 1px solid var(--faint);
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sail-row:hover {
+  border-color: var(--brass-dim);
+  background: rgba(201, 162, 74, 0.06);
+}
+
+.sail-row.set {
+  border-color: var(--brass-dim);
+  background: rgba(201, 162, 74, 0.12);
+}
+
+.sail-row-name {
+  font-size: 0.98rem;
+}
+
+.sail-row-state {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.sail-row.set .sail-row-state {
+  color: var(--brass);
+}
+
+.sail-all {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.sail-all .button {
+  flex: 1;
+  padding: 0.4rem 0.3rem;
+  font-size: 0.82rem;
+}
+
+.sea-trial .stat-value {
+  font-variant-numeric: tabular-nums;
+}

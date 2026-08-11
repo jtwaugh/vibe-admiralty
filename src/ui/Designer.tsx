@@ -135,8 +135,8 @@ export function Designer({ design }: { design: Design }) {
             type="button"
             className="button primary"
             data-testid="btn-launch"
-            disabled
-            title="Sea trials open in phase 3"
+            onClick={store.launch}
+            title="Take her out and see whether she swims"
           >
             Launch
           </button>
