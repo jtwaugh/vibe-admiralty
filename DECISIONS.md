@@ -129,3 +129,54 @@ Judgment calls made where SPEC.md is silent. One line of rationale each.
   cropped it out of the screenshots the e2e suite measures.
 - **Hull thumbnails share one WebGL context**, rendered one per frame. Five live
   canvases would burn five contexts, and browsers only grant a handful.
+
+## Sea trial (phase 3)
+
+- **Sails are flat plates trimmed to bisect the apparent wind**, and each rig
+  has a limit on how close to the centreline it can be braced (`minTrimDeg` in
+  `sails.json`). Nothing else was needed to make a square rigger sail badly to
+  windward and a headsail lie closer: at 25° off the bow the courses are aback
+  and the jib still draws, and both fall out of the same formula.
+- **A sail taken aback is not a special case.** The angle of attack goes
+  negative, the force reverses, and she is pushed astern with the cloth
+  bellying the wrong way. Special-casing it would have hidden a real behaviour.
+- **The rig carries a heel-induced yaw couple.** Without it the model had lee
+  helm: the centre of effort sits forward of the centre of lateral resistance,
+  so with the helm amidships she bore away 70° in ninety seconds. Once she is
+  over, the drive acts to leeward of the hull's drag and the couple swings her
+  bow up into the wind. Adding it is what makes her hold a course, and it is
+  the reason a hard-pressed ship rounds up.
+- **The centre of lateral resistance is the centroid of the submerged profile**,
+  taken from the station keel line, not a constant. It was a magic −0.03 L.
+- **The righting arm is sampled once at launch and interpolated.** Solving the
+  waterplane afresh sixty times a second costs far more than a hundred-and-one
+  point curve, and the design cannot change during a trial.
+- **She is launched upright and at rest, never at the answer.** A ship with her
+  guns all to port rolls down into her list on camera; one with no stability
+  keeps going. Starting her at her resting heel would be scripting exactly the
+  failure states SPEC §7 says must emerge. The cost is that a perfectly
+  symmetric ship with negative GM would balance on a knife edge in a dead calm;
+  any wind or any asymmetry breaks it, and both demos have wind.
+- **What kills these ships is the lee gunports, not the righting arm.** A sound
+  frigate's arm never vanishes inside 100° of heel; she dies because the ports
+  go under, she fills, and the water she takes lies to leeward and holds her
+  there. Flooding is modelled as orifice flow through however many ports are
+  under, and it feeds back as weight, sinkage and a heeling moment.
+- **Roll damping and yaw damping both climb steeply with beam**, per SPEC §7's
+  "extreme beam wallows (high roll damping, sluggish yaw)". Bilge and eddy
+  damping really do grow that way, and a bluff beamy section sheds far more
+  water when the hull swings. The wide sloop turns in 5.2 of her own lengths
+  where the standard one turns in 3.7.
+- **Surge alone runs on a compressed time constant.** A fifteen-hundred-ton ship
+  really does take three or four minutes to gather way from rest, which is
+  unwatchable in a widget. Heel, the hydrostatics and every failure state are
+  integrated at real time, and they are what the acceptance tests measure.
+- **"Wind onto the port beam" in ACCEPTANCE E is taken to mean the wind presses
+  the list deeper**, i.e. it blows on the side she is already down. The other
+  reading rights her, and there is no capsize to photograph.
+- **Twenty knots does not capsize the Lopside frigate, and the model was not
+  bent to make it.** Her list is 3.4°, a beam wind of 20 kn takes her to 11°,
+  and her lee ports are still six feet clear of the water. She goes over when
+  the wind is strong enough to bury them, which for this hull is about 50 kn.
+  The demo shows both: the readable list under 20 kn, and the squall that
+  finishes her.

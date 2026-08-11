@@ -406,13 +406,20 @@ export type EquilibriumResult = {
   downfloodingDeg: { port: number; starboard: number }
 }
 
+/**
+ * How far each opening stands along the waterplane normal. An opening whose
+ * projection is less than the waterplane offset is under water, and the
+ * difference is how deep. The sea trial uses these to flood her.
+ */
+export function openingProjections(openings: Vec3[], heelRad: number, trimRad: number): number[] {
+  const n = waterplaneNormal(heelRad, trimRad)
+  return openings.map((p) => n.x * p.x + n.y * p.y + n.z * p.z)
+}
+
 function anyOpeningSubmerged(openings: Vec3[], state: FloatState): boolean {
   if (openings.length === 0) return false
-  const n = waterplaneNormal(state.heelRad, state.trimRad)
-  for (const p of openings) {
-    if (n.x * p.x + n.y * p.y + n.z * p.z < state.offset) return true
-  }
-  return false
+  const projections = openingProjections(openings, state.heelRad, state.trimRad)
+  return projections.some((v) => v < state.offset)
 }
 
 const SCAN_LIMIT_DEG = 88

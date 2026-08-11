@@ -172,6 +172,12 @@ export const sailDefSchema = z.object({
   heightFactor: z.number().positive(),
   /** Aerodynamic force coefficient at the optimum apparent wind angle. */
   coefficient: z.number().positive(),
+  /**
+   * How close to the ship's centreline this sail can be trimmed, in degrees.
+   * A square sail's yards jam against the shrouds long before a headsail's
+   * sheets do, which is why a ship rig sails so poorly on the wind.
+   */
+  minTrimDeg: z.number().min(0).max(90),
 })
 export type SailDef = z.infer<typeof sailDefSchema>
 

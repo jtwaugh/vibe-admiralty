@@ -18,6 +18,8 @@ export type SailInstance = {
   coeX: number
   coeY: number
   coefficient: number
+  /** How close to the centreline the sail can be trimmed; see the data file. */
+  minTrimDeg: number
   /** Height of the yard the sail hangs from, above the baseline. */
   yardY: number
   /** Half width of the yard. */
@@ -87,6 +89,7 @@ export function buildSailPlan(
         coeX: mast.x,
         coeY,
         coefficient: def.coefficient,
+        minTrimDeg: def.minTrimDeg,
         yardY: coeY + height / 2,
         yardHalfSpan: halfSpan,
         corners: [],
@@ -116,6 +119,7 @@ export function buildSailPlan(
       coeX: centre.x,
       coeY: centre.y,
       coefficient: def.coefficient,
+      minTrimDeg: def.minTrimDeg,
       yardY: Math.max(...corners.map((p) => p.y)),
       yardHalfSpan: Math.sqrt(area) / 2,
       corners,
