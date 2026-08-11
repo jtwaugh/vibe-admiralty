@@ -180,3 +180,44 @@ Judgment calls made where SPEC.md is silent. One line of rationale each.
   the wind is strong enough to bury them, which for this hull is about 50 kn.
   The demo shows both: the readable list under 20 kn, and the squall that
   finishes her.
+
+## Rendering the sea trial
+
+- **The dock keeps its flat water; only the trial gets the real ocean.** The
+  designer view is meant to read like an elevation, and the e2e tests read the
+  ship's outline straight off the canvas by assuming the background is one
+  colour across any given row. A shader sea at the dock would buy nothing and
+  break that.
+- **The ship moves through the world and the sea is recentred under her.** The
+  waves are a function of world position, so the swell does not swim along with
+  her, and the wake is laid down along the track she actually sailed, which
+  means it curves when she turns.
+- **The flat water beyond the wave grid sits four metres down.** Level with the
+  sea it sliced up through the troughs and scattered hard-edged dark facets over
+  the swell. At that distance the step is a tenth of a degree and fog has it.
+- **Sails are built flat and carry their own full-belly shape as an attribute.**
+  The vertex shader interpolates between the two from one uniform per sail, so
+  the billow is exact at both ends, extrapolates the right way when a sail is
+  aback, and needs no calculus. Each sail has its own material because the wind
+  is not the same on all of them.
+- **The yards are braced to the trim angle the wind model computed.** They were
+  drawn square while the physics pushed on a braced sail, which is exactly the
+  second source of truth rule 4 forbids. The yard now hangs inside its sail's
+  contract node so one rotation turns spar and canvas together.
+- **Canvas casts shadows but does not receive them.** The cloth is displaced by
+  its billow in the vertex shader and the shadow pass is not, so the whole rig
+  came out speckled with shadow from its own flat depth image.
+- **The sea trial's eye stands abaft the starboard beam, where the sun is.**
+  From ahead the sails are edge on and lit from behind and the rig reads as grey
+  card. It also drops and comes level as she goes over, because a ship on her
+  beam ends is a long low thing and the money shot was otherwise a speck at the
+  bottom of the frame.
+- **There is a fill light off the water.** Without it the side of the ship the
+  sun is not on went to a flat near-black and half of every orbit was dead.
+- **The demos put the wind on the port beam** so she leans towards the camera:
+  a list away from the eye foreshortens itself into nothing. The Lopside is the
+  exception, and its demo drags the camera round to her lee side instead.
+- **The hull rides the swell but is not pushed by it.** SPEC §7 keeps waves out
+  of the forces; the heave and the wave-driven tilt are read from the same wave
+  sum the shader runs and applied to the drawing only, so she sits in the water
+  rather than on it.
