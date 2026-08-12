@@ -4,6 +4,13 @@ A map of the hull parameter model, written because working it out from scratch
 takes a full sweep of the codebase. If you are about to add, rename or
 re-parameterise a hull dimension, read this first.
 
+Line numbers below are a convenience and will rot; the **names** are the
+durable reference, so grep for the function or constant rather than trusting
+the number. Where this page states a measured figure rather than a code
+reference, that figure is pinned by a test — see
+`tests/documented-figures.test.ts` and the note at the head of DECISIONS.md's
+disagreement section.
+
 ## Coordinate convention
 
 Ship-local, declared at `src/hull/stations.ts:5-22` and honoured everywhere:

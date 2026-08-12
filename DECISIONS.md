@@ -31,7 +31,7 @@ Judgment calls made where SPEC.md is silent. One line of rationale each.
   lights all key off `depthOfHold` as "where the underbody ends", and a second
   depth notion would put the paint out of register with the shape. The slider
   reads the hold depth and reports the solved draught beneath it, because
-  labelling a 7.2 m hold "draught" when she draws 4.6 m would be a lie of
+  labelling a 7.2 m hold "draught" when she draws 4.8 m would be a lie of
   exactly the kind this project refuses elsewhere.
 - **The displacement control is a metres-valued length slider with tonnage as a
   readout.** Displacement is total mass, so a tonnes-valued slider would have to
@@ -191,8 +191,9 @@ Judgment calls made where SPEC.md is silent. One line of rationale each.
 - **Roll damping and yaw damping both climb steeply with beam**, per SPEC §7's
   "extreme beam wallows (high roll damping, sluggish yaw)". Bilge and eddy
   damping really do grow that way, and a bluff beamy section sheds far more
-  water when the hull swings. The wide sloop turns in 5.2 of her own lengths
-  where the standard one turns in 3.7.
+  water when the hull swings. The wide abomination turns in 5.3 of her own
+  lengths where the standard sloop turns in 3.8, both measured at a matched
+  3 m/s so the rudder is doing the same work in each.
 - **Surge alone runs on a compressed time constant.** A fifteen-hundred-ton ship
   really does take three or four minutes to gather way from rest, which is
   unwatchable in a widget. Heel, the hydrostatics and every failure state are
@@ -201,11 +202,10 @@ Judgment calls made where SPEC.md is silent. One line of rationale each.
   the list deeper**, i.e. it blows on the side she is already down. The other
   reading rights her, and there is no capsize to photograph.
 - **Twenty knots does not capsize the Lopside frigate, and the model was not
-  bent to make it.** Her list is 3.4°, a beam wind of 20 kn takes her to 11°,
-  and her lee ports are still six feet clear of the water. She goes over when
-  the wind is strong enough to bury them, which for this hull is about 50 kn.
-  The demo shows both: the readable list under 20 kn, and the squall that
-  finishes her.
+  bent to make it.** The measured figures are in "Where the physics disagrees
+  with ACCEPTANCE.md" below, and only there: this entry used to carry its own
+  copy of them, and the two copies were already contradicting each other on her
+  heel in 20 kn one commit after they were written.
 
 ## Rendering the sea trial
 
@@ -253,22 +253,35 @@ Judgment calls made where SPEC.md is silent. One line of rationale each.
 Two of the demo-two boxes describe behaviour the hydrostatics do not produce.
 The model was not bent to make them true; both are recorded here instead.
 
-- **"Roll period visibly long" at extreme beam does not follow.** Beam is what
-  gives a hull its metacentric height, and a stiff hull has a *short* roll
-  period, not a long one. Measured: the wide sloop (beam 11.2 m, GM 1.83 m)
-  rolls with a period of 7.9 s and is back inside two degrees five seconds after
-  a fifteen-degree displacement; the standard sloop (beam 8.6 m, GM 0.70 m)
-  takes 9.0 s and ten seconds. What the wide hull does do is everything else
-  SPEC §7 asks of her: she is nearly dead-beat in roll, she lies over at a
-  steady ten degrees under all plain sail and never stands back up, and she
-  turns in 5.2 of her own lengths where the standard sloop turns in 3.7 and
-  comes round only 22° in twenty seconds of full helm. That is a wallow; it is
-  not a long roll period, and no honest hull will give both.
+Every number below is re-measured by `tests/documented-figures.test.ts`, which
+fails if the model drifts away from this page. It is the only copy of these
+figures; do not restate them elsewhere.
+
+- **"Roll period visibly long" at extreme beam does not follow.** Released from
+  fifteen degrees in a dead calm, the standard sloop (beam 8.6 m, GM 0.70 m)
+  comes upright in 2.6 s, swings 6.8° past it, and is still working outside two
+  degrees ten seconds later. The wide abomination (beam 11.2 m, GM 1.84 m)
+  takes rather longer to reach upright, 3.3 s, but overswings barely a degree
+  and is inside two degrees after 2.6 s. She is nearly dead-beat: there is no
+  second roll to watch, and a roll period is not really a property she has.
+  What she does have is everything else SPEC §7 asks: she lies over at a steady
+  11° under every sail she owns in 25 kn and never stands back up, and she turns
+  in 5.3 of her own lengths where the standard sloop turns in 3.8. That is a
+  wallow; it is not a long roll period, and no honest hull will give both.
+  (An earlier version of this entry argued the opposite way — that a stiff hull
+  must roll *quicker* — and quoted a 7.9 s period for the wide hull against
+  9.0 s for the standard one. Measured as the interval between zero crossings
+  the 9.0 s reproduces; the 7.9 s does not, and the wide hull's first swing is
+  in fact the slower of the two. It is the damping, not the metacentric height,
+  that settles her. That entry also called her "the wide sloop", which reads as
+  the plain sloop at beam 11.2 m — a different ship, GM 2.19 m — rather than the
+  wide abomination actually measured. Hence the full name here.)
 - **Twenty knots does not capsize the Lopside, and her gunports are not near
-  the water.** Every battery to port gives a frigate a 3.4° list, which puts
-  her lee sills 2.7 m clear; twenty knots on that side takes her to 10° and
-  about 2 m clear, and she holds it indefinitely. She dies at about 50 knots,
-  when the sills finally go under and she fills. The demo therefore shows both:
-  the list at rest and under 20 kn, and then the squall that actually finishes
-  her. Making 20 kn enough would have meant either a frigate with no stability
-  or a wind model that lies.
+  the water.** Every battery to port gives a frigate a 3.4° list, which puts her
+  lee sills 2.68 m clear. Under every sail set, twenty knots on that side
+  settles her at about 8.7° with the sills still 2.12 m — seven feet — clear,
+  and she holds it indefinitely; the HUD in the demo reads a degree more while
+  she is still working in the swell. She dies at about 36 kn, when the sills go
+  under and she fills. The demo uses 50 kn so that there is no ambiguity on
+  camera about what killed her. Making 20 kn enough would have meant either a
+  frigate with no stability or a wind model that lies.
