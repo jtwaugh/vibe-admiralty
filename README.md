@@ -1,114 +1,152 @@
 # Shipwright
 
-A browser-based Napoleonic ship designer. Pick a hull, arm it, rig it, paint it,
-then launch it into an ocean with real wind and find out whether your choices
-float. Export the result as a versioned JSON design spec and a glTF model with a
-named-node hierarchy, ready for a future age-of-sail combat game to consume.
+Shipwright is a ship designer for the browser. The ships are from the Napoleonic
+period. You select a hull. Then you add guns, rigging, and paint. Then you launch
+the ship into an ocean that has wind. The sea trial shows you if your design
+floats.
 
-There is no server, no combat, and no save button — the build is static and the
-export is a file download.
+You can export the design as a JSON file that has a version number. You can also
+export a glTF model that has a hierarchy of named nodes. A future age-of-sail
+game can read these two files.
 
-The contract is [SPEC.md](SPEC.md); the definition of done is
-[ACCEPTANCE.md](ACCEPTANCE.md); every judgment call made where the spec was
-silent is logged in [DECISIONS.md](DECISIONS.md).
+Shipwright has no server, no combat, and no save function. The build is static.
+The export function makes a file download.
+
+[SPEC.md](SPEC.md) gives the requirements. [ACCEPTANCE.md](ACCEPTANCE.md) gives
+the definition of done. [DECISIONS.md](DECISIONS.md) gives a record of each
+decision that SPEC.md does not specify.
 
 ## Quick start
 
+Install the dependencies. Then start the development server.
+
 ```bash
 npm install
-npm run dev        # Vite dev server
+npm run dev
 ```
 
-Node 20+ (developed on 22). First Playwright run needs `npx playwright install chromium`.
+You must have Node 20 or a later version. The development used Node 22. Before
+the first Playwright run, do this command: `npx playwright install chromium`.
 
-| Command | What it does |
+| Command | Function |
 | --- | --- |
-| `npm run dev` | Dev server with HMR |
-| `npm run build` | Type-check (`tsc -b`) + production build |
-| `npm run preview` | Serve the built app on :4173 |
-| `npm run test` | Vitest unit suite |
-| `npm run e2e` | Builds, then runs the Playwright specs against the preview server |
-| `npm run e2e:shots` | Runs the demo scripts, writing retina screenshots to `shots/` |
-| `npm run schema` | Regenerates `shipwright.schema.json` from the zod schemas |
+| `npm run dev` | Starts the development server with hot module replacement |
+| `npm run build` | Does the type check (`tsc -b`) and makes the production build |
+| `npm run preview` | Supplies the build on port 4173 |
+| `npm run test` | Runs the Vitest unit tests |
+| `npm run e2e` | Makes the build, then runs the Playwright tests against the preview server |
+| `npm run e2e:shots` | Runs the demo scripts and writes retina screenshots to `shots/` |
+| `npm run schema` | Makes `shipwright.schema.json` again from the zod schemas |
 
 ## The three screens
 
-**Hull select.** Five presets — Sloop, Brig, Frigate (28), Frigate (38), Third
-Rate (74) — each a bundle of hull parameters plus the slider ranges it allows,
-shown with a rendered thumbnail and its length, beam and nominal gun count.
+**Hull select.** There are five presets: Sloop, Brig, Frigate (28), Frigate (38),
+and Third Rate (74). Each preset is a set of hull parameters. Each preset also
+gives the permitted range for each slider. The screen shows a thumbnail image,
+the length, the beam, and the nominal number of guns.
 
-**Designer.** The ship sits in a locked broadside camera that reads like a
-profile drawing; an orbit toggle unlocks it. The left panel carries hull sliders
-(beam, freeboard, sheer), the timber scheme, rig, cosmetics and copper. Mount
-markers are raycast targets on real geometry — click a battery, a chaser or a
-swivel rail to open its modal and set the pattern and the port and starboard
-counts independently. Every control writes to one Zustand store, and the derived
-stats bar recomputes live: displacement, draft, GM, static list, gun weight,
-broadside weight per side, crew, cost in pounds.
+**Designer.** The camera is locked to a broadside view. This view is equivalent
+to a profile drawing. Use the orbit control to unlock the camera. The left panel
+has the hull sliders for the beam, the freeboard, and the sheer. The panel also
+has the controls for the timber, the rig, the cosmetic parts, and the copper.
 
-**Sea trial.** Launch drops her into the ocean with a wind dial and a speed
-slider, per-group sail controls, and a tiller (or `A`/`D`). The stability
-solution runs every frame. Return to dock and the design comes back intact.
+The mount markers are raycast targets on the applicable geometry. Click a
+battery, a chaser, or a swivel rail to open the related dialog. In the dialog,
+select the pattern. Then set the port count and the starboard count
+independently.
 
-## How it works
+All the controls write to one Zustand store. The statistics bar calculates these
+values again immediately: the displacement, the draft, the GM, the static list,
+the gun weight, the broadside weight for each side, the crew, and the cost in
+pounds.
 
-**The station curves are the only source of truth.** The hull is generated from
-21 transverse stations along the keel, interpolated from beam, depth, fullness
-and sheer. Those same curves are lofted into the render mesh (`src/hull/loft.ts`),
-integrated for hydrostatics (`src/physics/hydrostatics.ts`), and used to place
-every socket (`src/hull/sockets.ts`). Nothing is ever measured off the render
-mesh to compute physics.
+**Sea trial.** Push Launch to put the ship in the ocean. The screen has a wind
+dial, a speed slider, sail controls for each group, and a tiller. You can also
+use the `A` key and the `D` key for the tiller. The program calculates the
+stability solution for each frame. Push Return to Dock to go back. The design
+does not change.
 
-**Hydrostatics are direct integration, not a small-angle shortcut.** For a
-candidate waterplane (draft, heel, trim) each station polygon is clipped against
-the plane, the submerged areas are integrated for volume and centre of buoyancy,
-and draft is solved so displacement equals mass. The righting arm GZ comes out
-of the same clipping at any heel, so vanishing stability is a fact of the model
-rather than a constant. The centre of gravity is assembled in full 3D from every
-mass — hull structure by zone, ballast, stores, guns, rig — including the lateral
-offset from asymmetric port/starboard batteries. A one-sided battery therefore
-lists the ship at the dock, and capsize happens because the heeling moment
-exceeded peak righting moment, never because something triggered it.
+## How the program operates
 
-**Wind is force, not animation.** Each `set` sail contributes ½ρv²·A·C at its
-centre of effort, decomposed into drive and heel by wind angle; furled sails
-contribute nothing. Heel, speed and yaw are integrated with heavy damping. Waves
-displace the drawing and nothing else — the hull rides the swell but is not
-pushed by it.
+**The station curves are the only source of data.** The program makes the hull
+from 21 transverse stations along the keel. It interpolates the stations from the
+beam, the depth, the fullness, and the sheer. The same curves make the render
+mesh (`src/hull/loft.ts`). The same curves also give the hydrostatics
+(`src/physics/hydrostatics.ts`) and the position of each socket
+(`src/hull/sockets.ts`). The program never measures the render mesh to calculate
+the physics.
 
-**Parts are data.** Guns, timber, sails, cosmetics and presets are typed JSON in
-`src/data/`, validated by zod at load. Adding a gun rating means editing
-`guns.json`; it never means touching component code. Every part carries a mass, a
-mounting height and a cost in period pounds, and all three feed the totals.
+**The program integrates the hydrostatics directly.** It does not use a
+small-angle approximation. For each candidate waterplane (the draft, the heel,
+and the trim), the program clips each station polygon against the plane. Then it
+integrates the submerged areas to get the volume and the centre of buoyancy. Then
+it solves the draft until the displacement is equal to the mass.
+
+The same clipping calculation gives the righting arm GZ at each heel angle. Thus
+the point of vanishing stability is a result of the model. It is not a constant.
+
+The program calculates the centre of gravity in three dimensions from all the
+masses. The masses include the hull structure for each zone, the ballast, the
+stores, the guns, and the rig. The calculation includes the lateral offset of
+asymmetric batteries. Thus a battery on one side only makes the ship list at the
+dock. The ship capsizes only when the heeling moment is more than the maximum
+righting moment. No other condition causes a capsize.
+
+**Wind supplies force. It is not an animation.** Each sail in the set condition
+supplies a force of ½ρv²·A·C at its centre of effort. The program divides this
+force into a drive component and a heel component by the wind angle. Furled sails
+supply no force. The program integrates the heel, the speed, and the yaw with
+strong damping. The waves move the image only. The hull moves with the swell, but
+the swell does not push the hull.
+
+**The parts are data.** The guns, the timber, the sails, the cosmetic parts, and
+the presets are typed JSON files in `src/data/`. Zod validates the files at load
+time. To add a gun rating, edit `guns.json`. Do not change the component code.
+Each part has a mass, a mounting height, and a cost in period pounds. All three
+values go into the totals.
 
 ## Export contract
 
-`Export JSON` writes a document against `shipwright.schema.json`: the resolved
-hull parameters, timber, rig, mounts (batteries carrying `port` and `starboard`
-counts), cosmetics, a `derived` block, and an auto-generated `stations` array of
-crew stations — helm, one gun battery per armed deck, sail handling and lookout
-per mast, chasers if armed — each with a ship-local position and a crew
-requirement. The round trip is exact: the dev import button reproduces the design
-state deep-equal.
+Push Export JSON to write a document. The document agrees with
+`shipwright.schema.json`. The document contains the applicable hull parameters,
+the timber, the rig, the mounts, the cosmetic parts, a `derived` block, and a
+`stations` array. Each battery in the mounts has a `port` count and a `starboard`
+count.
 
-`Export glTF` writes a named-node hierarchy — `Hull`, `Mast_1..n` with their
-yards, `Sail_<mast>_<tier>`, `Rudder`, `Gunport_<deck>_<index>`, gun meshes under
-their mounts. The names are part of the contract; a future engine animates by
-node name.
+The program makes the `stations` array automatically. The array contains the crew
+stations: the helm, one gun battery for each armed deck, sail handling and
+lookout for each mast, and the chasers if they have guns. Each station has a
+position in ship coordinates and a crew requirement. The round trip is exact: the
+import button in the development build makes the same design state.
 
-## Testing
+Push Export glTF to write a hierarchy of named nodes: `Hull`, `Mast_1` to
+`Mast_n` with their yards, `Sail_<mast>_<tier>`, `Rudder`, and
+`Gunport_<deck>_<index>`. The gun meshes are below their mounts. The names are
+part of the contract, because a future engine uses the node names to make the
+animation.
 
-86 Vitest assertions cover the pieces that are testable as maths: a 40×10×6 box
-barge against its closed-form draft, displacement and small-angle GM; GZ curve
-shape; monotonicity of draft in mass; the carronade story (swapping quarterdeck
-32 lb carronades for long 24s must strictly decrease GM); data-file ordering
-constraints on mass and cost; export round-trip and glTF node names.
+## Tests
 
-Playwright drives the UI end to end, and `npm run e2e:shots` runs the two demo
-scripts from ACCEPTANCE.md — "The Frigate" under all plain sail, and "The
-Abomination", a minimum-beam sloop over-canvased and armed with long 32s, which
-goes over on her own. The screenshots are meant to be looked at, not just
-produced.
+The Vitest suite has 86 assertions. The assertions test the parts that are
+mathematics:
+
+- a box barge of 40 x 10 x 6 against its calculated draft, displacement, and
+  small-angle GM
+- the shape of the GZ curve
+- the increase of the draft with the mass
+- the carronade test: if you replace the 32 lb carronades on the quarterdeck with
+  long 24 lb guns, the GM must decrease
+- the mass and cost sequence in the data files
+- the export round trip and the glTF node names
+
+Playwright tests the user interface from end to end. The command `npm run
+e2e:shots` runs the two demo scripts from ACCEPTANCE.md:
+
+1. The Frigate, with all plain sail set.
+2. The Abomination, a sloop that has the minimum beam, too much sail, and long
+   32 lb guns. This ship capsizes without help.
+
+Look at the screenshots. Do not only make them.
 
 ## Layout
 
@@ -125,13 +163,19 @@ tests/           Vitest
 e2e/             Playwright specs + demo scripts
 ```
 
-## Known deviations from ACCEPTANCE.md
+## Differences from ACCEPTANCE.md
 
-Two demo-two boxes describe behaviour the hydrostatics decline to produce, and
-the model was not bent to make them true. An extreme-beam hull wallows in every
-way the spec asks — nearly dead-beat in roll, lying over steadily under sail,
-turning in 5.2 lengths against 3.7 — but its roll period is *shorter*, not
-longer, because beam is what gives a hull its GM. And 20 knots does not capsize
-the all-to-port frigate; she lists 3.4° at rest, 10° under that wind, and holds
-it. She dies at about 50, when her lee sills finally go under. Both are argued in
-full at the end of [DECISIONS.md](DECISIONS.md).
+Two items in the second demo specify behaviour that the hydrostatics do not
+produce. The model was not changed to make these two items true.
+
+1. A hull that has an extreme beam behaves as the spec specifies in most
+   conditions. The roll stops almost immediately. The ship holds a steady heel
+   angle under sail. The ship turns in 5.2 lengths and not in 3.7 lengths. But
+   the roll period is shorter, not longer, because the beam supplies the GM of a
+   hull.
+2. A wind of 20 knots does not capsize the frigate that has all the guns to port.
+   The ship lists 3.4° at rest and 10° in that wind. The list does not increase.
+   The ship capsizes at approximately 50 knots, when the lee sills go below the
+   water.
+
+The last part of [DECISIONS.md](DECISIONS.md) gives the full reasons.
