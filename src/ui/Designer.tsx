@@ -146,10 +146,21 @@ export function Designer({ design }: { design: Design }) {
       <aside className="panel">
         <PanelGroup
           title="Hull"
-          note={`${design.hull.keelLength.toFixed(0)} m · ${design.hull.deckCount} gun deck${design.hull.deckCount > 1 ? 's' : ''}`}
+          note={`${design.hull.deckCount} gun deck${design.hull.deckCount > 1 ? 's' : ''}`}
           defaultOpen
           testId="group-hull"
         >
+          <Scale
+            label="Length"
+            unit="m"
+            value={design.hull.keelLength}
+            min={preset.ranges.keelLength.min}
+            max={preset.ranges.keelLength.max}
+            step={0.5}
+            hint={`${derived.displacementTonnes.toFixed(0)} t`}
+            onChange={(value) => store.setHullParam('keelLength', value)}
+            testId="slider-length"
+          />
           <Scale
             label="Beam"
             unit="m"
@@ -159,6 +170,17 @@ export function Designer({ design }: { design: Design }) {
             step={0.1}
             onChange={(value) => store.setHullParam('beam', value)}
             testId="slider-beam"
+          />
+          <Scale
+            label="Depth of hold"
+            unit="m"
+            value={design.hull.depthOfHold}
+            min={preset.ranges.depthOfHold.min}
+            max={preset.ranges.depthOfHold.max}
+            step={0.1}
+            hint={`draws ${derived.draftM.toFixed(1)} m`}
+            onChange={(value) => store.setHullParam('depthOfHold', value)}
+            testId="slider-depth"
           />
           <Scale
             label="Freeboard"

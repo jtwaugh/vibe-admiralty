@@ -217,16 +217,25 @@ export function buildShipModel(design: Design): ShipModel {
 
   // Ballast is stowed on the floor over the keelson; stores fill the hold above
   // it. Both sit low, which is what makes these ships stand up to their canvas.
+  //
+  // A stretched hull is ballasted and stored in proportion to her length: hold
+  // capacity grows with length, so leaving these two fixed would make a longer
+  // ship float progressively shallower and stiffer than the one she was
+  // stretched from. The factor is exactly 1 at the preset length, so a design
+  // that never touches the length slider is unchanged. Beam and depth are
+  // deliberately not in it: beam's effect on stability is tuned against the
+  // demo scripts, and depth is the draught slider's whole point.
+  const holdScale = hull.params.keelLength / preset.params.keelLength
   items.push({
     label: 'Iron and shingle ballast',
     group: 'ballast',
-    massKg: preset.ballastTonnes * 1000,
+    massKg: preset.ballastTonnes * 1000 * holdScale,
     position: { x: -0.02 * hull.length, y: 0.13 * hull.params.depthOfHold, z: 0 },
   })
   items.push({
     label: 'Water, provisions and powder',
     group: 'stores',
-    massKg: preset.storesTonnes * 1000,
+    massKg: preset.storesTonnes * 1000 * holdScale,
     position: { x: -0.01 * hull.length, y: 0.34 * hull.params.depthOfHold, z: 0 },
   })
 

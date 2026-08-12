@@ -58,6 +58,42 @@ describe('station generation', () => {
     )
   })
 
+  it('stretches the hull along the keel when the length slider moves', () => {
+    const long = buildHull({ ...preset.params, keelLength: preset.ranges.keelLength.max })
+    const short = buildHull({ ...preset.params, keelLength: preset.ranges.keelLength.min })
+    expect(long.stations[0].x).toBeLessThan(short.stations[0].x)
+    expect(long.stations[STATION_COUNT - 1].x).toBeGreaterThan(short.stations[STATION_COUNT - 1].x)
+  })
+
+  // Beam is the width and length is the length: neither slider may leak into
+  // the other's axis. This is the regression that keeps the two honest.
+  it('leaves the breadths alone when only the length changes', () => {
+    const long = buildHull({ ...preset.params, keelLength: preset.ranges.keelLength.max })
+    const short = buildHull({ ...preset.params, keelLength: preset.ranges.keelLength.min })
+    for (let i = 0; i < STATION_COUNT; i++) {
+      expect(long.stations[i].maxHalfBeam).toBeCloseTo(short.stations[i].maxHalfBeam, 9)
+    }
+  })
+
+  it('leaves the station spacing alone when only the beam changes', () => {
+    const wide = buildHull({ ...preset.params, beam: preset.ranges.beam.max })
+    const narrow = buildHull({ ...preset.params, beam: preset.ranges.beam.min })
+    for (let i = 0; i < STATION_COUNT; i++) {
+      expect(wide.stations[i].x).toBeCloseTo(narrow.stations[i].x, 9)
+    }
+  })
+
+  it('deepens the underbody and lifts the gun deck with the depth of hold', () => {
+    const deep = buildHull({ ...preset.params, depthOfHold: preset.ranges.depthOfHold.max })
+    const shallow = buildHull({ ...preset.params, depthOfHold: preset.ranges.depthOfHold.min })
+    // The floor rises toward the ends in proportion to the depth, so a deeper
+    // hold has more rise at the ends and a taller section amidships.
+    expect(deep.stations[0].keelY).toBeGreaterThan(shallow.stations[0].keelY)
+    expect(hullDepth(deep.params)).toBeGreaterThan(hullDepth(shallow.params))
+    expect(deep.decks[0].y).toBeGreaterThan(shallow.decks[0].y)
+    expect(deep.weatherDeckY).toBeGreaterThan(shallow.weatherDeckY)
+  })
+
   it('raises the rail at both ends when sheer increases', () => {
     const flat = buildHull({ ...preset.params, sheer: 0 })
     const curved = buildHull({ ...preset.params, sheer: 1 })
@@ -156,6 +192,39 @@ describe('sockets', () => {
     const after = wideSockets.mounts.find((m) => m.id === 'battery-deck-0')!
     for (let i = 0; i < before.positions.length; i++) {
       expect(after.positions[i].z).toBeGreaterThan(before.positions[i].z)
+    }
+  })
+
+  it('spreads the battery along the ship when the length slider stretches her', () => {
+    const long = buildHull({ ...preset.params, keelLength: preset.ranges.keelLength.max })
+    const before = buildSockets(hull, preset).mounts.find((m) => m.id === 'battery-deck-0')!
+    const after = buildSockets(long, preset).mounts.find((m) => m.id === 'battery-deck-0')!
+    const span = (positions: { x: number }[]) =>
+      Math.max(...positions.map((p) => p.x)) - Math.min(...positions.map((p) => p.x))
+    expect(span(after.positions)).toBeGreaterThan(span(before.positions))
+  })
+
+  it('keeps every mount seated on the hull at both ends of the new sliders', () => {
+    const corners = [
+      { keelLength: preset.ranges.keelLength.min },
+      { keelLength: preset.ranges.keelLength.max },
+      { depthOfHold: preset.ranges.depthOfHold.min },
+      { depthOfHold: preset.ranges.depthOfHold.max },
+    ]
+    for (const corner of corners) {
+      const deformed = buildHull({ ...preset.params, ...corner })
+      const built = buildSockets(deformed, preset)
+      for (const socket of built.mounts) {
+        for (const position of socket.positions) {
+          expect(Math.abs(position.x)).toBeLessThan(deformed.length / 2)
+          const u = position.x / deformed.length + 0.5
+          expect(position.z).toBeLessThanOrEqual(halfBreadthAt(deformed, u, position.y) + 0.01)
+          expect(position.y).toBeGreaterThan(deformed.decks[socket.deckIndex].y)
+        }
+      }
+      for (const mast of built.masts) {
+        expect(mast.stepY).toBeLessThan(deformed.params.depthOfHold)
+      }
     }
   })
 

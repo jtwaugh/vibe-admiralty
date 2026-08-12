@@ -37,6 +37,7 @@ export function Scale({
   max,
   step = 0.1,
   unit,
+  hint,
   onChange,
   testId,
 }: {
@@ -46,6 +47,12 @@ export function Scale({
   max: number
   step?: number
   unit?: string
+  /**
+   * The solved consequence of this slider, shown under the track. Draught and
+   * displacement are results, not inputs, so the sliders that move them say so
+   * rather than pretending to set them.
+   */
+  hint?: string
   onChange(value: number): void
   testId?: string
 }) {
@@ -69,6 +76,7 @@ export function Scale({
       />
       <span className="scale-ends">
         <span>{min.toFixed(1)}</span>
+        {hint ? <span className="scale-hint">{hint}</span> : null}
         <span>{max.toFixed(1)}</span>
       </span>
     </label>

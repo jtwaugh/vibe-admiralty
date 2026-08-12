@@ -21,6 +21,32 @@ Judgment calls made where SPEC.md is silent. One line of rationale each.
 - **Section shape is a superellipse below the point of maximum breadth** with
   the exponent driven by a fullness term, and a tumblehome curve above it. This
   gives one smooth family covering fine V ends and full boxy midships.
+- **A "draught" control is exposed as `depthOfHold`, labelled "Depth of hold".**
+  Draught is solved, not set, so a slider cannot hand it to the hydrostatics
+  without inverting the model. A deeper hold stretches the superellipse over a
+  taller span and lifts more floor at the ends, giving a finer, deeper underbody
+  that carries the same mass at a greater draft — the effect the user wants, by
+  a route that keeps the geometry independent of loading. A dedicated underbody
+  term was rejected: the timber zone bands, the painted wales and the stern
+  lights all key off `depthOfHold` as "where the underbody ends", and a second
+  depth notion would put the paint out of register with the shape. The slider
+  reads the hold depth and reports the solved draught beneath it, because
+  labelling a 7.2 m hold "draught" when she draws 4.6 m would be a lie of
+  exactly the kind this project refuses elsewhere.
+- **The displacement control is a metres-valued length slider with tonnage as a
+  readout.** Displacement is total mass, so a tonnes-valued slider would have to
+  re-solve length whenever timber, guns or copper changed — the thumb would move
+  when the user had not touched it, and the range would need re-deriving per
+  design. Storing the geometric parameter and showing the consequence keeps one
+  source of truth and still answers "make her bigger".
+- **Ballast and stores scale linearly with length, not with beam or depth.**
+  Hold capacity grows with length, so leaving them fixed would make a stretched
+  ship float shallower and stiffer than the one she was stretched from. Length
+  only: the factor is exactly 1 at the preset length, so every figure tuned
+  against the demo scripts is untouched, and mass then grows with volume so the
+  length slider is stability-neutral by construction. Letting ballast chase
+  `depthOfHold` would double-count against the draught slider, and letting it
+  chase beam would retune the abomination and wallow demos for no gain.
 
 ## Hydrostatics
 

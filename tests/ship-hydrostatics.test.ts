@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { getPreset, hullPresets } from '../src/data'
 import type { Design } from '../src/export/schema'
 import { computeDerived } from '../src/physics/derived'
 import {
@@ -33,6 +34,33 @@ describe('frigate hydrostatics', () => {
     expect(derived.draftM).toBeLessThan(7)
     expect(derived.gmM).toBeGreaterThan(0.5)
     expect(derived.gmM).toBeLessThan(2.5)
+  })
+
+  it('draws more water as the depth of hold increases', () => {
+    const preset = getPreset('frigate-38')
+    const { min, max } = preset.ranges.depthOfHold
+    const drafts = [0, 1, 2, 3].map((i) => {
+      const depthOfHold = min + ((max - min) * i) / 3
+      const deeper = { ...design, hull: { ...design.hull, depthOfHold } }
+      return computeDerived(buildShipModel(deeper)).draftM
+    })
+    for (let i = 1; i < drafts.length; i++) {
+      expect(drafts[i]).toBeGreaterThan(drafts[i - 1])
+    }
+  })
+
+  // Ballast and stores scale with length, so a stretched hull displaces more
+  // without sitting appreciably deeper. If this drifts, the scaling in
+  // masses.ts has come adrift from the geometry.
+  it('displaces more but keeps her draft when she is stretched', () => {
+    const preset = getPreset('frigate-38')
+    const ends = [preset.ranges.keelLength.min, preset.ranges.keelLength.max].map((keelLength) =>
+      computeDerived(buildShipModel({ ...design, hull: { ...design.hull, keelLength } })),
+    )
+    const [short, long] = ends
+    expect(long.displacementTonnes).toBeGreaterThan(short.displacementTonnes * 1.15)
+    expect(long.draftM).toBeGreaterThan(short.draftM * 0.9)
+    expect(long.draftM).toBeLessThan(short.draftM * 1.1)
   })
 
   it('reports no static list when the armament is symmetric', () => {
@@ -126,4 +154,30 @@ describe('capsize at rest', () => {
     const derived = computeDerived(buildShipModel(design))
     expect(derived.capsizesAtRest).toBe(false)
   })
+})
+
+// The acceptance guard for the slider ranges in presets.json. Every preset must
+// stay a working ship at every extreme of every hull slider; if one of these
+// fails, narrow the offending range rather than loosening the test.
+describe('every preset survives the ends of its hull sliders', () => {
+  const sliderKeys = ['keelLength', 'beam', 'depthOfHold', 'freeboard', 'sheer'] as const
+
+  for (const preset of hullPresets) {
+    for (const key of sliderKeys) {
+      for (const end of ['min', 'max'] as const) {
+        it(`${preset.id} floats upright at ${end} ${key}`, () => {
+          const base = defaultDesign(preset.id)
+          const design: Design = {
+            ...base,
+            hull: { ...base.hull, [key]: preset.ranges[key][end] },
+          }
+          const derived = computeDerived(buildShipModel(design))
+          expect(derived.capsizesAtRest).toBe(false)
+          expect(derived.gmM).toBeGreaterThan(0)
+          expect(derived.gunportFreeboardM).toBeGreaterThan(0)
+          expect(Number.isFinite(derived.draftM)).toBe(true)
+        })
+      }
+    }
+  }
 })

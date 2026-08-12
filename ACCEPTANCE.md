@@ -32,6 +32,9 @@ Done means every box below is checked by passing automated tests or agent-verifi
 
 - [ ] Hull select shows 5 presets with thumbnails; selecting Frigate (38) opens designer.
 - [ ] Beam slider changes rendered hull width (compare two screenshots' bounding boxes) and updates displacement readout.
+- [ ] Length slider stretches the rendered hull (silhouette proportion, since the camera refits to length) and increases the displacement readout, without changing any station's breadth.
+- [ ] Depth of hold slider increases the draft readout, and the hint under the track reports the solved draught.
+- [ ] Every preset stays afloat, upright, positive-GM and with gunports clear of the water at both ends of all five hull sliders.
 - [ ] Clicking the quarterdeck mount opens the modal; setting 32 lb carronades updates broadside weight readout and renders gun meshes.
 - [ ] Modal port/starboard counts work independently; "match sides" syncs them; setting port-only produces a nonzero static list readout and a visible heel in the orbit view.
 - [ ] Total cost readout updates when changing timber species, gun pattern, and copper sheathing.

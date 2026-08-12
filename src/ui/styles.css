@@ -422,6 +422,12 @@ select {
   font-variant-numeric: lining-nums tabular-nums;
 }
 
+/* The solved consequence of a slider, sitting between its two end labels. */
+.scale-hint {
+  color: var(--brass);
+  letter-spacing: 0.02em;
+}
+
 .choice select {
   width: 100%;
   margin-top: 0.3rem;

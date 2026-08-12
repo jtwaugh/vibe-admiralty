@@ -30,6 +30,17 @@ describe('data files', () => {
     expect(cosmeticsFile.paintSchemes.length).toBeGreaterThanOrEqual(3)
   })
 
+  it('keeps every preset default inside its own slider ranges', () => {
+    const sliderKeys = ['keelLength', 'beam', 'depthOfHold', 'freeboard', 'sheer'] as const
+    for (const preset of presetsFile.presets) {
+      for (const key of sliderKeys) {
+        const range = preset.ranges[key]
+        expect(preset.params[key]).toBeGreaterThanOrEqual(range.min)
+        expect(preset.params[key]).toBeLessThanOrEqual(range.max)
+      }
+    }
+  })
+
   it('has unique ids for every gun and preset', () => {
     const gunIds = new Set(guns.map((g) => g.id))
     expect(gunIds.size).toBe(guns.length)

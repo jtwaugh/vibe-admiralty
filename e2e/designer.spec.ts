@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
-import { hullWidth, mastLean, orbitBy, readSilhouette } from './silhouette'
+import { hullAspect, hullWidth, mastLean, orbitBy, readSilhouette } from './silhouette'
 
 /**
  * ACCEPTANCE section C, the designer half. The sea trial rows (launch and sail
@@ -96,6 +96,43 @@ test('the beam slider widens the rendered hull and moves the displacement', asyn
   expect(narrow.bowOn).toBeLessThan(narrow.broadside * 0.6)
   expect(wide.ratio).toBeGreaterThan(narrow.ratio * 1.15)
   expect(wideDisplacement).toBeGreaterThan(narrowDisplacement)
+})
+
+test('the length slider stretches the rendered hull and moves the displacement', async ({
+  page,
+}) => {
+  await openFrigate(page)
+
+  // Measured broadside as a proportion, not a width: the viewer refits the
+  // camera to the ship's length, so a longer hull is drawn at about the same
+  // pixel length with a shorter-looking rig around it.
+  const measure = async () => {
+    await page.waitForTimeout(300)
+    return hullAspect(await readSilhouette(page))
+  }
+
+  await setSlider(page, 'slider-length', 39)
+  const shortAspect = await measure()
+  const shortDisplacement = numberIn(await statValue(page, 'stat-displacement'))
+
+  await setSlider(page, 'slider-length', 55)
+  const longAspect = await measure()
+  const longDisplacement = numberIn(await statValue(page, 'stat-displacement'))
+
+  expect(longAspect).toBeGreaterThan(shortAspect * 1.1)
+  expect(longDisplacement).toBeGreaterThan(shortDisplacement)
+})
+
+test('the depth of hold slider deepens the draught readout', async ({ page }) => {
+  await openFrigate(page)
+
+  await setSlider(page, 'slider-depth', 5.8)
+  const shallow = numberIn(await statValue(page, 'stat-draft'))
+
+  await setSlider(page, 'slider-depth', 8.6)
+  const deep = numberIn(await statValue(page, 'stat-draft'))
+
+  expect(deep).toBeGreaterThan(shallow)
 })
 
 test('the quarterdeck mount opens from the hull marker and arms with carronades', async ({

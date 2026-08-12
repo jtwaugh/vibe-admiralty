@@ -1,7 +1,19 @@
 import { expect, test } from '@playwright/test'
+import { setSlider } from './demo'
 
 /** Preset ids as the UI exposes them; e2e drives the app as a user would. */
 const PRESET_IDS = ['sloop', 'brig', 'frigate-28', 'frigate-38', 'third-rate-74']
+
+/**
+ * The ends of the two hull sliders added alongside beam, freeboard and sheer.
+ * Values are the frigate-38 preset's declared ranges.
+ */
+const SLIDER_ENDS = [
+  { name: 'length-min', testId: 'slider-length', value: 39 },
+  { name: 'length-max', testId: 'slider-length', value: 55 },
+  { name: 'depth-min', testId: 'slider-depth', value: 5.8 },
+  { name: 'depth-max', testId: 'slider-depth', value: 8.6 },
+]
 
 /**
  * Demo screenshots for looking at, per CLAUDE.md rule 2: the hull select
@@ -42,6 +54,20 @@ test.describe('gallery', () => {
     await page.waitForTimeout(400)
     await page.screenshot({ path: 'shots/mount-modal.png' })
   })
+
+  // The pictures rule 2 asks for: is she still a ship at the ends of the two
+  // new sliders? Gunports clear of the water, masts through the deck, the whole
+  // hull in frame.
+  for (const end of SLIDER_ENDS) {
+    test(`hull slider extreme: ${end.name}`, async ({ page }) => {
+      await page.goto('/')
+      await page.getByTestId('preset-frigate-38').click()
+      await expect(page.getByTestId('viewer-canvas')).toBeVisible()
+      await setSlider(page, end.testId, end.value)
+      await page.waitForTimeout(900)
+      await page.screenshot({ path: `shots/slider-${end.name}.png` })
+    })
+  }
 
   test('the lopside: every battery to port', async ({ page }) => {
     await page.goto('/')

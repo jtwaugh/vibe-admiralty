@@ -120,7 +120,9 @@ export const hullPresetSchema = z.object({
   nominalGuns: z.number().int().positive(),
   params: hullParamsSchema,
   ranges: z.object({
+    keelLength: rangeSchema,
     beam: rangeSchema,
+    depthOfHold: rangeSchema,
     freeboard: rangeSchema,
     sheer: rangeSchema,
   }),

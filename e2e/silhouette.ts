@@ -90,6 +90,19 @@ export function hullWidth(silhouette: Silhouette): number {
 }
 
 /**
+ * Width over height of the whole silhouette. The viewer reframes the camera to
+ * fit the ship's length, so a stretched hull is drawn at about the same pixel
+ * length and everything else shrinks around it: an absolute width would prove
+ * nothing. A proportion survives the reframing, and since the rig's height is
+ * set by beam rather than length, stretching her raises this number.
+ */
+export function hullAspect(silhouette: Silhouette): number {
+  const box = silhouette.box
+  if (!box || box.bottom === box.top) return 0
+  return (box.right - box.left) / (box.bottom - box.top)
+}
+
+/**
  * How far the mastheads lean off the hull's centre, in pixels: her heel. Only
  * meaningful looking down the ship's length, where a list is a sideways tilt
  * rather than a rotation towards the camera.

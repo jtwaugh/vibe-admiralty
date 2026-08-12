@@ -36,7 +36,7 @@ The hull is generated geometry, not a mesh asset. Parameters:
 
 Generation approach: define 21 transverse stations along the keel; each station is a hull cross-section curve controlled by beam/depth/fullness interpolation; loft the stations into a closed mesh. The station curves are the single source of truth: the same station data drives (a) the render mesh, (b) the hydrostatics (Section 7), and (c) socket placement. Do not compute hydrostatics from the render mesh.
 
-Hull presets are parameter bundles plus allowed slider ranges. Sliders in the left panel adjust `beam`, `freeboard`, and `sheer` within the preset's range ("Spore-style" deformation). Sockets (mast steps, battery positions, chaser positions, rails) are computed from stations and move correctly when sliders change.
+Hull presets are parameter bundles plus allowed slider ranges. Sliders in the left panel adjust `keelLength`, `beam`, `depthOfHold`, `freeboard`, and `sheer` within the preset's range ("Spore-style" deformation). The sliders that move a solved quantity show it beneath the track: length carries the resulting displacement in tonnes, depth of hold the resulting draught in metres. Neither is an input — see Section 7. Sockets (mast steps, battery positions, chaser positions, rails) are computed from stations and move correctly when sliders change.
 
 ## 5. Parts catalog (data files, not code)
 

@@ -17,7 +17,7 @@ import { defaultDesign } from './defaults'
 export type Screen = 'hull-select' | 'designer' | 'sea-trial'
 
 /** Which hull parameters the left panel is allowed to deform (SPEC §4). */
-export type SliderKey = 'beam' | 'freeboard' | 'sheer'
+export type SliderKey = 'keelLength' | 'beam' | 'depthOfHold' | 'freeboard' | 'sheer'
 
 type DesignerStore = {
   screen: Screen
